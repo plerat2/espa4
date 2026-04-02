@@ -2,34 +2,40 @@ import { auth, rtdb } from "./firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { ref, get, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-const PROFESSOR_EMAIL = "josepantonipeiro@cepallevant.eu";
+const PROFE_JS_VERSION = "2026-04-02_students_click_v2";
+console.log("✅ PROFE JS carregat:", PROFE_JS_VERSION);
 
+const PROFESSOR_EMAIL = "josepantonipeiro@cepallevant.eu";
+const ACTIVITATS = ["A1","A2","A3","A4","A5","A6","A7","A8","A9","A10"];
+const PER_ACT_SCAN = 500;
+const PER_ACT_ATTEMPTS = 500;
+
+// Elements comuns
 const who = document.getElementById("who");
 const logoutBtn = document.getElementById("logoutBtn");
 const refreshBtn = document.getElementById("refreshBtn");
-const filterEmail = document.getElementById("filterEmail");
-const limitSel = document.getElementById("limitSel");
-const viewSel = document.getElementById("viewSel");
-const activitySel = document.getElementById("activitySel");
 
-const studentsSection = document.getElementById("studentsSection");
-const attemptsSection = document.getElementById("attemptsSection");
+// UI alumnes
+const detectedStudents = document.getElementById("detectedStudents");
+const detectedEmpty = document.getElementById("detectedEmpty");
+const studentDetailWrap = document.getElementById("studentDetailWrap");
+const studentDetailTitle = document.getElementById("studentDetailTitle");
+const studentActivities = document.getElementById("studentActivities");
+const backToStudents = document.getElementById("backToStudents");
+const refreshStudents = document.getElementById("refreshStudents");
 
-const studentsEl = document.getElementById("students");
+// UI intents
+const studentAttemptsWrap = document.getElementById("studentAttemptsWrap");
+const attemptsTitle = document.getElementById("attemptsTitle");
 const attemptsEl = document.getElementById("attempts");
-const emptyStudents = document.getElementById("emptyStudents");
 const emptyAttempts = document.getElementById("emptyAttempts");
+const backToDetail = document.getElementById("backToDetail");
 
-const kpiIntents = document.getElementById("kpiIntents");
-const kpiMitjana = document.getElementById("kpiMitjana");
-const kpiTemps = document.getElementById("kpiTemps");
-
+// Modal errades
 const backdrop = document.getElementById("backdrop");
 const closeModal = document.getElementById("closeModal");
 const modalTitle = document.getElementById("modalTitle");
 const modalBody = document.getElementById("modalBody");
-
-let cache = [];
 
 function fmt(n){
   if (n === null || n === undefined || Number.isNaN(n)) return "—";
@@ -39,194 +45,168 @@ function toLocal(ts){
   try { return new Date(ts).toLocaleString(); } catch { return ts; }
 }
 
-function close(){ backdrop.style.display = 'none'; }
-closeModal.addEventListener('click', close);
-backdrop.addEventListener('click', (ev)=>{ if(ev.target===backdrop) close(); });
+function close(){ backdrop.style.display = "none"; }
+closeModal?.addEventListener("click", close);
+backdrop?.addEventListener("click", (ev)=>{ if(ev.target===backdrop) close(); });
 
-logoutBtn.onclick = ()=> signOut(auth).then(()=> window.location='index.html');
+logoutBtn.onclick = () => signOut(auth).then(()=> window.location="index.html");
+refreshBtn.onclick = () => scanDetectedStudents();
+refreshStudents?.addEventListener("click", () => scanDetectedStudents(true));
 
-viewSel.addEventListener('change', ()=>{
-  const v = viewSel.value;
-  if (v === 'students') {
-    studentsSection.style.display = '';
-    attemptsSection.style.display = 'none';
-  } else {
-    studentsSection.style.display = 'none';
-    attemptsSection.style.display = '';
-  }
+backToStudents?.addEventListener("click", () => {
+  studentDetailWrap.style.display = "none";
+  studentAttemptsWrap.style.display = "none";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+backToDetail?.addEventListener("click", () => {
+  studentAttemptsWrap.style.display = "none";
+  studentDetailWrap.style.display = "";
+  window.scrollTo({ top: studentDetailWrap.getBoundingClientRect().top + window.scrollY - 10, behavior: "smooth" });
 });
 
-refreshBtn.onclick = load;
-filterEmail.addEventListener('input', ()=> render());
-limitSel.addEventListener('change', load);
-activitySel.addEventListener('change', load);
+let detectedIndex = new Map();
 
-onAuthStateChanged(auth, (user)=>{
-  if(!user){ window.location='login.html'; return; }
+onAuthStateChanged(auth, async (user) => {
+  if(!user){ window.location="login.html"; return; }
   who.textContent = `Sessió: ${user.email}`;
 
   if(user.email !== PROFESSOR_EMAIL){
-    alert('Aquest panell és només per al professor.');
-    window.location='unitats.html';
+    alert("Aquest panell és només per al professor.");
+    window.location="unitats.html";
     return;
   }
 
-  load();
+  await scanDetectedStudents();
 });
 
-async function load(){
-  studentsEl.innerHTML='';
-  attemptsEl.innerHTML='';
-  emptyStudents.style.display='none';
-  emptyAttempts.style.display='none';
+async function scanDetectedStudents(keepSelection=false){
+  const currentEmail = keepSelection && studentDetailWrap.style.display !== "none"
+    ? (studentDetailTitle.textContent.split("—").slice(-1)[0] || "").trim()
+    : "";
 
-  const lim = parseInt(limitSel.value,10) || 50;
-  const act = activitySel.value || 'A1';
+  detectedStudents.innerHTML = "<p class='meta' style='text-align:center;'>Carregant alumnes…</p>";
+  detectedEmpty.style.display = "none";
 
-  const q = query(ref(rtdb, `resultats/${act}`), orderByChild('timestamp'), limitToLast(lim));
+  const idx = new Map();
+
+  const perAct = await Promise.all(ACTIVITATS.map(async (act) => {
+    const q = query(ref(rtdb, `resultats/${act}`), orderByChild("timestamp"), limitToLast(PER_ACT_SCAN));
+    const snap = await get(q);
+    if (!snap.exists()) return [];
+    return Object.values(snap.val()).map(d => ({...d, act}));
+  }));
+
+  const all = perAct.flat();
+
+  all.forEach(r => {
+    const email = (r.email || "").trim();
+    if (!email) return;
+
+    if (!idx.has(email)) {
+      idx.set(email, { email, intentsTotal: 0, acts: new Set(), lastTs: "", perAct: {} });
+    }
+    const o = idx.get(email);
+    o.intentsTotal += 1;
+    o.acts.add(r.act);
+    if (!o.lastTs || (r.timestamp && r.timestamp > o.lastTs)) o.lastTs = r.timestamp;
+
+    if (!o.perAct[r.act]) o.perAct[r.act] = { count: 0, lastTs: "" };
+    o.perAct[r.act].count += 1;
+    if (!o.perAct[r.act].lastTs || (r.timestamp && r.timestamp > o.perAct[r.act].lastTs)) o.perAct[r.act].lastTs = r.timestamp;
+  });
+
+  detectedIndex = idx;
+  renderDetectedStudents();
+
+  if (currentEmail && detectedIndex.has(currentEmail)) {
+    openStudentDetail(currentEmail);
+  }
+}
+
+function renderDetectedStudents(){
+  detectedStudents.innerHTML = "";
+  const arr = [...detectedIndex.values()].sort((a,b) => (b.lastTs || "").localeCompare(a.lastTs || ""));
+
+  if (arr.length === 0) {
+    detectedEmpty.style.display = "block";
+    return;
+  }
+  detectedEmpty.style.display = "none";
+
+  arr.forEach(s => {
+    const card = document.createElement("div");
+    card.className = "stu-card";
+    card.innerHTML = `
+      <div class='stu-email' title='${s.email}'>${s.email}</div>
+      <div class='stu-meta'>
+        <span class='badge'>Activitats: ${s.acts.size}</span>
+        <span class='badge'>Intents: ${s.intentsTotal}</span>
+        <span class='badge'>Darrer: ${s.lastTs ? toLocal(s.lastTs) : "—"}</span>
+      </div>
+      <div class='meta' style='margin-top:10px;'>Clica per veure activitats fetes</div>
+    `;
+    card.addEventListener("click", () => openStudentDetail(s.email));
+    detectedStudents.appendChild(card);
+  });
+}
+
+function openStudentDetail(email){
+  const s = detectedIndex.get(email);
+  if (!s) return;
+
+  studentAttemptsWrap.style.display = "none";
+  studentDetailWrap.style.display = "";
+  studentDetailTitle.textContent = `Activitats fetes — ${email}`;
+  studentActivities.innerHTML = "";
+
+  const acts = Object.entries(s.perAct)
+    .map(([act, v]) => ({ act, ...v }))
+    .sort((a,b) => (b.lastTs || "").localeCompare(a.lastTs || ""));
+
+  acts.forEach(a => {
+    const row = document.createElement("div");
+    row.className = "list-row";
+    row.innerHTML = `
+      <div class='cell'><span class='badge'>${a.act}</span></div>
+      <div class='cell'><span class='badge'>${a.count}</span></div>
+      <div class='cell hide-sm2'>${a.lastTs ? toLocal(a.lastTs) : "—"}</div>
+      <div class='cell'><button class='btn-small'>Obrir intents</button></div>
+    `;
+    row.querySelector("button").addEventListener("click", () => showAttemptsForStudent(email, a.act));
+    studentActivities.appendChild(row);
+  });
+
+  window.scrollTo({ top: studentDetailWrap.getBoundingClientRect().top + window.scrollY - 10, behavior: "smooth" });
+}
+
+async function showAttemptsForStudent(email, act){
+  studentDetailWrap.style.display = "none";
+  studentAttemptsWrap.style.display = "";
+  attemptsTitle.textContent = `Intents — ${email} · ${act}`;
+  attemptsEl.innerHTML = "<p class='meta' style='text-align:center;'>Carregant intents…</p>";
+  emptyAttempts.style.display = "none";
+
+  const q = query(ref(rtdb, `resultats/${act}`), orderByChild("timestamp"), limitToLast(PER_ACT_ATTEMPTS));
   const snap = await get(q);
-  const val = snap.val();
-
-  cache = [];
-  if (val) {
-    cache = Object.entries(val).map(([id, data]) => ({ id, ...data }));
-    cache.sort((a,b)=> (b.timestamp||'').localeCompare(a.timestamp||''));
+  if (!snap.exists()) {
+    attemptsEl.innerHTML = "";
+    emptyAttempts.style.display = "block";
+    return;
   }
 
-  render();
-}
+  const all = Object.entries(snap.val()).map(([id,data]) => ({ id, ...data }));
+  const mine = all.filter(r => ((r.email || "").trim().toLowerCase() === email.trim().toLowerCase()));
+  mine.sort((a,b) => (b.timestamp || "").localeCompare(a.timestamp || ""));
 
-function render(){
-  const f = (filterEmail.value||'').trim().toLowerCase();
-  const data = f ? cache.filter(x => (x.email||'').toLowerCase().includes(f)) : cache.slice();
-
-  kpiIntents.textContent = fmt(data.length);
-  if(data.length===0){
-    kpiMitjana.textContent='—';
-    kpiTemps.textContent='—';
-  } else {
-    const avgScore = data.reduce((s,x)=> s + (Number(x.encerts)||0), 0) / data.length;
-    const avgTotal = data.reduce((s,x)=> s + (Number(x.total)||0), 0) / data.length;
-    const avgTime = data.reduce((s,x)=> s + (Number(x.tempsSegons)||0), 0) / data.length;
-
-    kpiMitjana.textContent = (avgTotal ? `${avgScore.toFixed(1)}/${avgTotal.toFixed(0)}` : `${avgScore.toFixed(1)}`);
-    kpiTemps.textContent = (avgTime ? avgTime.toFixed(0) : '—');
+  attemptsEl.innerHTML = "";
+  if (mine.length === 0) {
+    emptyAttempts.style.display = "block";
+    return;
   }
 
-  renderStudents(data);
-  renderAttempts(data);
-}
-
-function renderStudents(data){
-  studentsEl.innerHTML='';
-  if(data.length===0){ emptyStudents.style.display='block'; return; }
-
-  const map = new Map();
-  data.forEach(r=>{
-    const key = (r.email || '(sense email)');
-    if(!map.has(key)) map.set(key, []);
-    map.get(key).push(r);
-  });
-
-  const rows = [];
-  for (const [email, arr] of map.entries()) {
-    const intents = arr.length;
-    const avgScore = arr.reduce((s,x)=> s + (Number(x.encerts)||0), 0) / intents;
-    const avgTotal = arr.reduce((s,x)=> s + (Number(x.total)||0), 0) / intents;
-    const best = arr.reduce((m,x)=> Math.max(m, Number(x.encerts)||0), 0);
-    const avgTime = arr.reduce((s,x)=> s + (Number(x.tempsSegons)||0), 0) / intents;
-
-    rows.push({ email, intents, avgScore, avgTotal, best, avgTime, attempts: arr });
-  }
-  rows.sort((a,b)=> a.email.localeCompare(b.email));
-
-  rows.forEach(row=>{
-    const div = document.createElement('div');
-    div.className = 'row cardRow';
-
-    div.innerHTML = `
-      <div class='cell' title='${row.email}'>${row.email}</div>
-      <div class='cell'><span class='badge'>${row.intents}</span></div>
-      <div class='cell'><span class='badge'>${row.avgTotal ? row.avgScore.toFixed(1) + '/' + row.avgTotal.toFixed(0) : row.avgScore.toFixed(1)}</span></div>
-      <div class='cell hide-xs'><span class='badge'>${row.best}</span></div>
-      <div class='cell hide-sm'><span class='badge'>${row.avgTime ? row.avgTime.toFixed(0) + 's' : '—'}</span></div>
-      <div class='cell'><button class='btn-small'>Veure</button></div>
-    `;
-
-    div.querySelector('button').addEventListener('click', ()=> openStudentModal(row));
-    studentsEl.appendChild(div);
-  });
-}
-
-function openStudentModal(row){
-  modalTitle.textContent = `Detalls — ${row.email}`;
-  modalBody.innerHTML = '';
-
-  const p = document.createElement('div');
-  p.innerHTML = `
-    <p style='margin:0 0 8px;color:#555;'>
-      <strong>Intents:</strong> ${row.intents} ·
-      <strong>Mitjana:</strong> ${row.avgTotal ? row.avgScore.toFixed(1) + '/' + row.avgTotal.toFixed(0) : row.avgScore.toFixed(1)} ·
-      <strong>Millor:</strong> ${row.best}
-    </p>
-    <hr style='border:none;border-top:1px solid #eee;margin:10px 0 16px;'>
-  `;
-  modalBody.appendChild(p);
-
-  row.attempts.sort((a,b)=> (b.timestamp||'').localeCompare(a.timestamp||''));
-  row.attempts.forEach((r, idx)=>{
-    const box = document.createElement('div');
-    box.className = 'err';
-
-    const encerts = fmt(r.encerts);
-    const total = fmt(r.total);
-    const errades = fmt(r.errades);
-    const temps = fmt(r.tempsSegons);
-
-    box.innerHTML = `
-      <strong>Intent ${idx+1} · ${toLocal(r.timestamp||'')}</strong>
-      <div class='meta'>Encerts: <span class='badge'>${encerts}/${total}</span> · Errades: <span class='badge'>${errades}</span> · Temps: <span class='badge'>${temps}s</span></div>
-      <div style='margin-top:10px;'><button class='btn-small'>Veure errades</button></div>
-    `;
-
-    box.querySelector('button').addEventListener('click', ()=> openErrorsModal(row.email, r));
-    modalBody.appendChild(box);
-  });
-
-  backdrop.style.display = 'flex';
-}
-
-function openErrorsModal(email, r){
-  modalTitle.textContent = `Errades — ${email} · ${toLocal(r.timestamp||'')}`;
-  modalBody.innerHTML = '';
-
-  const errors = r.errors || [];
-  if (errors.length === 0) {
-    modalBody.innerHTML = "<p style='color:#666;'>✅ Cap errada. L’estudiant ho ha fet tot bé!</p>";
-  } else {
-    errors.forEach(e=>{
-      const div = document.createElement('div');
-      div.className = 'err';
-      div.innerHTML = `
-        <strong>Pregunta ${fmt(e.pregunta)}</strong>
-        <div class='meta'>Resposta usuari: <span class='badge'>${fmt(e.respostaUsuari)}</span></div>
-        <div class='meta'>Resposta correcta: <span class='badge'>${fmt(e.respostaCorrecta)}</span></div>
-        ${e.tipus ? `<div class='meta'>Tipus: <span class='badge'>${fmt(e.tipus)}</span></div>` : ''}
-      `;
-      modalBody.appendChild(div);
-    });
-  }
-
-  backdrop.style.display = 'flex';
-}
-
-function renderAttempts(data){
-  attemptsEl.innerHTML='';
-  if(data.length===0){ emptyAttempts.style.display='block'; return; }
-
-  data.forEach(r=>{
-    const card = document.createElement('div');
-    card.className='card';
+  mine.forEach(r => {
+    const card = document.createElement("div");
+    card.className = "card";
 
     const encerts = fmt(r.encerts);
     const total = fmt(r.total);
@@ -236,21 +216,46 @@ function renderAttempts(data){
     card.innerHTML = `
       <div class='attempt'>
         <div class='attempt-left'>
-          <div style='font-weight:600;font-size:1.05rem;word-break:break-word;'>${r.email || r.uid || '(sense email)'}</div>
-          <div class='meta'>${toLocal(r.timestamp || '')}</div>
+          <div style='font-weight:600;font-size:1.05rem;word-break:break-word;'>${email}</div>
+          <div class='meta'>${toLocal(r.timestamp || "")}</div>
           <div style='margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;'>
             <span class='badge'>Encerts: ${encerts}/${total}</span>
             <span class='badge'>Errades: ${errades}</span>
             <span class='badge'>Temps: ${temps}s</span>
           </div>
         </div>
-        <div>
-          <button class='btn-small'>Veure errades</button>
-        </div>
+        <div><button class='btn-small'>Veure errades</button></div>
       </div>
     `;
-
-    card.querySelector('button').addEventListener('click', ()=> openErrorsModal(r.email || r.uid || 'Estudiant', r));
+    card.querySelector("button").addEventListener("click", () => openErrorsModal(email, r));
     attemptsEl.appendChild(card);
   });
+
+  window.scrollTo({ top: studentAttemptsWrap.getBoundingClientRect().top + window.scrollY - 10, behavior: "smooth" });
+}
+
+function openErrorsModal(email, r){
+  modalTitle.textContent = `Errades — ${email} · ${toLocal(r.timestamp || "")}`;
+  modalBody.innerHTML = "";
+  const errors = r.errors || [];
+
+  if (!Array.isArray(errors) || errors.length === 0) {
+    modalBody.innerHTML = "<p style='color:#666;'>✅ Cap errada. L’estudiant ho ha fet tot bé!</p>";
+    backdrop.style.display = "flex";
+    return;
+  }
+
+  errors.forEach(e => {
+    const div = document.createElement("div");
+    div.className = "err";
+    div.innerHTML = `
+      <strong>Pregunta ${fmt(e.pregunta)}</strong>
+      <div class='meta'>Resposta usuari: <span class='badge'>${fmt(e.respostaUsuari)}</span></div>
+      <div class='meta'>Resposta correcta: <span class='badge'>${fmt(e.respostaCorrecta)}</span></div>
+      ${e.tipus ? `<div class='meta'>Tipus: <span class='badge'>${fmt(e.tipus)}</span></div>` : ""}
+    `;
+    modalBody.appendChild(div);
+  });
+
+  backdrop.style.display = "flex";
 }
