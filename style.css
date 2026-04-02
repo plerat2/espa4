@@ -1,0 +1,247 @@
+
+body{margin:0;font-family:'Poppins',sans-serif;background:#fafafa;color:#333;line-height:1.6;}
+.hero{padding:120px 20px;text-align:center;background:linear-gradient(135deg,#ffe9b3,#ffd98e);color:#4b3f27;}
+.hero-title{font-size:4rem;font-weight:600;margin-bottom:20px;}
+.hero-sub{font-size:1.4rem;max-width:750px;margin:0 auto 40px;color:#5e4a2f;}
+.btn-hero{padding:18px 42px;background:linear-gradient(135deg,#ffb700,#ff9800);border:none;border-radius:14px;font-size:1.4rem;color:white;cursor:pointer;box-shadow:0 6px 15px rgba(0,0,0,0.15);} 
+.cards{display:flex;justify-content:center;flex-wrap:wrap;gap:40px;}
+.card{width:280px;padding:35px 25px;background:white;border-radius:28px;text-decoration:none;color:#333;box-shadow:0 10px 28px rgba(0,0,0,0.08);text-align:center;}
+.card-icon{font-size:3.8rem;margin-bottom:15px;}
+.unit{padding:90px 20px;text-align:center;background:white;}
+.unit-title{font-size:2.6rem;font-weight:600;margin-bottom:50px;color:#3d2b7a;}
+/* ===== HERO FOTO (reutilitzable) ===== */
+.hero-photo {
+  position: relative;
+  padding: 80px 20px;
+  color: #fff;
+  overflow: hidden;
+  background: #0b1220;
+  background-image:
+    linear-gradient(135deg, rgba(2, 20, 40, .68), rgba(2, 132, 199, .38)),
+    var(--hero-img);
+  background-size: cover;
+  background-position: center;
+}
+
+.hero-photo::after{
+  content:"";
+  position:absolute; inset:0;
+  background: rgba(0,0,0,.12);
+  backdrop-filter: blur(0px);
+  pointer-events:none;
+}
+
+.hero-photo .hero-inner{
+  position: relative;
+  max-width: 980px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.hero-photo .hero-title{
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  font-weight: 800;
+  line-height: 1.05;
+  margin: 0 0 10px;
+  text-shadow: 0 10px 26px rgba(0,0,0,.25);
+}
+
+.hero-photo .hero-sub{
+  font-size: clamp(1rem, 1.6vw, 1.25rem);
+  opacity: .95;
+  margin: 0 auto 18px;
+  max-width: 58ch;
+}
+
+.hero-photo .hero-cta{
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+/* ===== HERO FOTO (reutilitzable) ===== */
+.hero-photo{
+  position:relative;
+  padding:80px 20px;
+  color:#fff;
+  overflow:hidden;
+  background:#0b1220;
+  background-image:
+    linear-gradient(135deg, rgba(2,20,40,.68), rgba(2,132,199,.38)),
+    var(--hero-img);
+  background-size:cover;
+  background-position:center;
+}
+.hero-photo::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.12);
+  pointer-events:none;
+}
+.hero-photo .hero-inner{
+  position:relative;
+  max-width:980px;
+  margin:0 auto;
+  text-align:center;
+}
+.hero-photo .hero-title{
+  font-size:clamp(2rem, 4vw, 3.4rem);
+  font-weight:800;
+  line-height:1.05;
+  margin:0 0 10px;
+  text-shadow:0 10px 26px rgba(0,0,0,.25);
+}
+.hero-photo .hero-sub{
+  font-size:clamp(1rem, 1.6vw, 1.25rem);
+  opacity:.95;
+  margin:0 auto 18px;
+  max-width:58ch;
+}
+.hero-photo .hero-cta{
+  display:inline-flex;
+  gap:10px;
+  align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
+  margin-top:8px;
+}
+.hero-compact{ padding:60px 20px; }
+
+/* Barra superior sobre el hero */
+.topbar-overlay{
+  position:absolute;
+  left:0; right:0; top:0;
+  padding:18px 20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  z-index:5;
+}
+
+@media (max-width: 640px){
+  .hero-photo{
+    padding:56px 16px;
+    background-image:
+      linear-gradient(135deg, rgba(2,20,40,.72), rgba(2,132,199,.42)),
+      var(--hero-img-mobile);
+    background-position:center;
+  }
+  .topbar-overlay{ padding:14px 14px; }
+}
+/* ===== Ajustos de llegibilitat del HERO ===== */
+.hero-photo .hero-title,
+.hero-photo .hero-sub{
+  color:#fff;
+  text-shadow:0 10px 26px rgba(0,0,0,.38);
+}
+
+/* Index: overlay més fluix per veure millor la foto */
+.page-index .hero-photo.hero-index{
+  background-image:
+    linear-gradient(135deg, rgba(2,20,40,.42), rgba(2,132,199,.18)),
+    var(--hero-img);
+}
+.page-index .hero-photo.hero-index::after{ background: rgba(0,0,0,.06); }
+
+@media (max-width: 640px){
+  .page-index .hero-photo.hero-index{
+    background-image:
+      linear-gradient(135deg, rgba(2,20,40,.48), rgba(2,132,199,.22)),
+      var(--hero-img-mobile);
+  }
+}
+
+/* ===== Barra superior damunt el hero (Unitats) ===== */
+.topbar-overlay #who{ color: rgba(255,255,255,.92) !important; }
+
+.btn-secundari,
+.btn-profe{
+  padding:10px 14px;
+  border-radius:12px;
+  border:1px solid rgba(15,23,42,.14);
+  background: rgba(255,255,255,.75);
+  color:#0f172a;
+  cursor:pointer;
+}
+
+.topbar-overlay .btn-secundari,
+.topbar-overlay .btn-profe{
+  background: rgba(255,255,255,.16);
+  border: 1px solid rgba(255,255,255,.35);
+  color:#fff;
+}
+.topbar-overlay .btn-secundari:hover,
+.topbar-overlay .btn-profe:hover{
+  background: rgba(255,255,255,.26);
+}
+
+/* ===== Unitats: seccions amb colors suaus (blau/verd) i bloc final lila ===== */
+.page-unitats .unit{
+  max-width: 1120px;
+  margin: 22px auto;
+  padding: 54px 18px;
+  border-radius: 24px;
+  text-align:center;
+}
+
+.page-unitats .unit-title{ color:#0f172a; }
+
+.page-unitats .unit.u1{ background: linear-gradient(180deg, #f3fbff 0%, #ffffff 70%); }
+.page-unitats .unit.u2{ background: linear-gradient(180deg, #f2fbf6 0%, #ffffff 70%); }
+.page-unitats .unit.u3{ background: linear-gradient(180deg, #eef7ff 0%, #ffffff 70%); }
+.page-unitats .unit.ufinal{ background: linear-gradient(180deg, #faf5ff 0%, #ffffff 70%); }
+.page-unitats .unit.ufinal .unit-title{ color:#6d28d9; }
+
+/* Cards: contorn suau segons bloc */
+.page-unitats .card{ border:1px solid rgba(15,23,42,.06); }
+.page-unitats .unit.u1 .card{ border-color: rgba(2,132,199,.14); }
+.page-unitats .unit.u2 .card{ border-color: rgba(16,185,129,.16); }
+.page-unitats .unit.u3 .card{ border-color: rgba(14,165,233,.14); }
+.page-unitats .unit.ufinal .card{ border-color: rgba(168,85,247,.18); }
+
+/* Login: baixa la targeta i deixa respirar */
+.page-login .hero-card{ margin-top: 10px; }
+/* ===== Unitats: COLORS SUAUS A LES CARDS (caixes d'activitats) ===== */
+
+/* Base (totes les cards) */
+.page-unitats .card{
+  background: rgba(255,255,255,.92);
+  border: 1px solid rgba(15,23,42,.06);
+  box-shadow: 0 10px 28px rgba(0,0,0,.07);
+}
+
+/* Unit 1 (blau molt suau) */
+.page-unitats .unit.u1 .card{
+  background: linear-gradient(180deg, #eef7ff 0%, #ffffff 75%);
+  border-color: rgba(2,132,199,.16);
+}
+
+/* Unit 2 (verd molt suau) */
+.page-unitats .unit.u2 .card{
+  background: linear-gradient(180deg, #ecfdf5 0%, #ffffff 75%);
+  border-color: rgba(16,185,129,.18);
+}
+
+/* Unit 3 (blau diferent però sempre suau) */
+.page-unitats .unit.u3 .card{
+  background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 75%);
+  border-color: rgba(14,165,233,.16);
+}
+
+/* Bloc final (lila suau) */
+.page-unitats .unit.ufinal .card{
+  background: linear-gradient(180deg, #faf5ff 0%, #ffffff 75%);
+  border-color: rgba(168,85,247,.20);
+}
+
+/* Efecte hover: una mica més “pro” però discret */
+.page-unitats .card:hover{
+  transform: translateY(-3px);
+  transition: transform .15s ease, box-shadow .15s ease;
+  box-shadow: 0 14px 34px rgba(0,0,0,.10);
+}

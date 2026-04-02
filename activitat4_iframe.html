@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="ca" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oclusives Petaca i Bodega</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet">
+  <style>
+    body { box-sizing: border-box; }
+    * { font-family: 'Poppins', sans-serif; }
+    .grafia-button { transition: all 0.2s ease; position: relative; }
+    .grafia-button:hover { transform: translateY(-2px); }
+    .grafia-button:active { transform: scale(0.95); }
+    .correct-animation { animation: correctPulse 0.5s ease; }
+    .incorrect-animation { animation: shake 0.5s ease; }
+    @keyframes correctPulse { 0%, 100% { transform: scale(1);} 50% { transform: scale(1.1);} }
+    @keyframes shake { 0%, 100% { transform: translateX(0);} 25% { transform: translateX(-5px);} 75% { transform: translateX(5px);} }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px);} to { opacity: 1; transform: translateY(0);} }
+    .confetti { position: fixed; pointer-events: none; z-index: 1000; }
+    .mode-card { transition: all 0.3s ease; }
+    .mode-card:hover { transform: translateY(-5px); }
+  </style>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 overflow-auto">
+  <div id="app-container" class="w-full min-h-full p-4 md:p-6">
+   <!-- Main Menu Screen -->
+   <div id="main-menu" class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="text-center mb-6">
+     <h1 id="main-title" class="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 mb-3">🎯 Oclusives Petaca i Bodega</h1>
+     <p id="instruction-text" class="text-slate-700 text-base md:text-lg font-semibold">Completa la darrera lletra de la paraula: P, T, C (sordes) o B, D, G (sonores)</p>
+    </div><!-- Mode Selection -->
+    <div class="grid md:grid-cols-2 gap-6 mb-8">
+     <!-- Practice Mode -->
+     <div class="mode-card bg-gradient-to-br from-blue-400 to-blue-500 rounded-3xl p-8 shadow-2xl border-4 border-blue-300 cursor-pointer" id="practice-mode-btn">
+      <div class="text-center text-white">
+       <div class="text-6xl mb-4">
+        📚
+       </div>
+       <h2 class="text-3xl font-black mb-3">Mode Pràctica</h2>
+       <p class="text-blue-100 font-semibold mb-4">Sèries de 10 paraules</p>
+       <ul class="text-left text-blue-100 text-sm space-y-2 mb-6">
+        <li>✓ Sense límit de temps</li>
+        <li>✓ Continua quan vulguis</li>
+        <li>✓ Perfecte per aprendre</li>
+       </ul>
+       <div class="bg-white text-blue-600 font-black py-3 px-6 rounded-full">
+        Comença
+       </div>
+      </div>
+     </div><!-- Competition Mode -->
+     <div class="mode-card bg-gradient-to-br from-orange-400 to-red-500 rounded-3xl p-8 shadow-2xl border-4 border-orange-300 cursor-pointer" id="competition-mode-btn">
+      <div class="text-center text-white">
+       <div class="text-6xl mb-4">
+        ⏱️
+       </div>
+       <h2 class="text-3xl font-black mb-3">Mode Competició</h2>
+       <p class="text-orange-100 font-semibold mb-4">2 minuts de repte</p>
+       <ul class="text-left text-orange-100 text-sm space-y-2 mb-6">
+        <li>✓ Contra el cronòmetre</li>
+        <li>✓ Encerts i ratxa</li>
+        <li>✓ Sense rànquing</li>
+       </ul>
+       <div class="bg-white text-orange-600 font-black py-3 px-6 rounded-full">
+        Competeix
+       </div>
+      </div>
+     </div>
+    </div>
+   </div><!-- Game Screen -->
+   <div id="game-screen" class="hidden">
+    <!-- Header with back button -->
+    <div class="flex justify-between items-center mb-4"><button id="back-to-menu-btn" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-full shadow-lg">← Menú</button>
+     <div id="mode-indicator" class="text-lg font-black text-slate-700"></div>
+     <div class="w-20"></div>
+    </div><!-- Timer -->
+    <div id="timer-container" class="hidden text-center mb-4">
+     <div class="bg-gradient-to-br from-red-500 to-orange-500 text-white rounded-2xl px-8 py-4 inline-block shadow-lg">
+      <div class="text-sm font-bold uppercase tracking-wider">
+       Temps Restant
+      </div>
+      <div class="text-4xl font-black">
+       <span id="timer">2:00</span>
+      </div>
+     </div>
+    </div><!-- Score Dashboard -->
+    <div class="flex flex-wrap justify-center gap-3 mb-6 max-w-4xl mx-auto">
+     <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl px-6 py-3 shadow-lg">
+      <div class="text-white/80 text-xs font-bold uppercase tracking-wider">
+       Punts
+      </div>
+      <div class="text-white text-2xl font-black">
+       <span id="points">0</span> pts
+      </div>
+     </div>
+     <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl px-6 py-3 shadow-lg">
+      <div class="text-white/80 text-xs font-bold uppercase tracking-wider">
+       Encerts
+      </div>
+      <div class="text-white text-2xl font-black">
+       <span id="correct-count">0</span>
+      </div>
+     </div>
+     <div class="bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl px-6 py-3 shadow-lg">
+      <div class="text-white/80 text-xs font-bold uppercase tracking-wider">
+       Ratxa
+      </div>
+      <div class="text-white text-2xl font-black">
+       🔥 <span id="streak">0</span>
+      </div>
+     </div>
+     <div id="round-display" class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl px-6 py-3 shadow-lg">
+      <div class="text-white/80 text-xs font-bold uppercase tracking-wider">
+       Paraules
+      </div>
+      <div class="text-white text-2xl font-black">
+       <span id="words-completed">0</span>/10
+      </div>
+     </div>
+    </div><!-- Progress Bar -->
+    <div class="max-w-3xl mx-auto mb-6">
+     <div class="bg-slate-200 rounded-full h-3 overflow-hidden shadow-inner">
+      <div id="progress-bar" class="bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 h-full transition-all duration-500 ease-out" style="width: 0%"></div>
+     </div>
+    </div><!-- Grafia Buttons - P, T, C (Sordes) i B, D, G (Sonores) -->
+    <div class="flex flex-wrap justify-center gap-3 mb-6 max-w-3xl mx-auto"><button class="grafia-button bg-gradient-to-br from-cyan-400 to-cyan-500 text-white rounded-2xl px-6 py-3 shadow-lg border-4 border-cyan-300" data-grafia="p"><span class="text-3xl font-black">P</span></button> <button class="grafia-button bg-gradient-to-br from-cyan-500 to-cyan-600 text-white rounded-2xl px-6 py-3 shadow-lg border-4 border-cyan-300" data-grafia="t"><span class="text-3xl font-black">T</span></button> <button class="grafia-button bg-gradient-to-br from-cyan-600 to-blue-700 text-white rounded-2xl px-6 py-3 shadow-lg border-4 border-cyan-300" data-grafia="c"><span class="text-3xl font-black">C</span></button>
+     <div class="w-full"></div><button class="grafia-button bg-gradient-to-br from-rose-400 to-rose-500 text-white rounded-2xl px-6 py-3 shadow-lg border-4 border-rose-300" data-grafia="b"><span class="text-3xl font-black">B</span></button> <button class="grafia-button bg-gradient-to-br from-rose-500 to-rose-600 text-white rounded-2xl px-6 py-3 shadow-lg border-4 border-rose-300" data-grafia="d"><span class="text-3xl font-black">D</span></button> <button class="grafia-button bg-gradient-to-br from-rose-600 to-pink-700 text-white rounded-2xl px-6 py-3 shadow-lg border-4 border-rose-300" data-grafia="g"><span class="text-3xl font-black">G</span></button>
+    </div><!-- Theory Tips Buttons -->
+    <div class="flex flex-wrap justify-center gap-2 mb-6 max-w-3xl mx-auto"><button id="tip-1-btn" class="bg-gradient-to-br from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white font-bold py-2 px-4 rounded-lg shadow-md text-sm">💡 Tip 0: Vocal tònica</button> <button id="tip-2-btn" class="bg-gradient-to-br from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white font-bold py-2 px-4 rounded-lg shadow-md text-sm">💡 Tip 1: Consonant</button> <button id="tip-3-btn" class="bg-gradient-to-br from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white font-bold py-2 px-4 rounded-lg shadow-md text-sm">💡 Tip 2: Excepcions</button> <button id="tip-4-btn" class="bg-gradient-to-br from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white font-bold py-2 px-4 rounded-lg shadow-md text-sm">💡 Tip 3: Femenins</button>
+    </div><!-- Current Word Display -->
+    <div class="max-w-2xl mx-auto mb-6">
+     <div class="bg-gradient-to-br from-white to-slate-50 rounded-3xl p-8 shadow-2xl border-4 border-slate-200">
+      <div class="text-center">
+       <div class="text-slate-500 text-sm font-bold uppercase tracking-wider mb-3">
+        Quina és la darrera lletra?
+       </div>
+       <div id="current-word" class="text-5xl md:text-7xl font-black text-slate-800 mb-4 tracking-tight"></div>
+       <div class="flex justify-center gap-2 mt-4">
+        <div class="h-2 w-2 bg-purple-400 rounded-full animate-pulse"></div>
+        <div class="h-2 w-2 bg-pink-400 rounded-full animate-pulse" style="animation-delay: 0.2s"></div>
+        <div class="h-2 w-2 bg-orange-400 rounded-full animate-pulse" style="animation-delay: 0.4s"></div>
+       </div>
+      </div>
+     </div>
+    </div><!-- Feedback Message -->
+    <div id="feedback-message" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 hidden">
+     <div id="feedback-content" class="bg-white rounded-3xl px-8 py-6 shadow-2xl border-4 text-center">
+      <div id="feedback-icon" class="text-6xl mb-2"></div>
+      <div id="feedback-text" class="text-2xl font-black"></div>
+      <div id="feedback-points" class="text-lg font-bold mt-1"></div>
+     </div>
+    </div>
+   </div><!-- Theory Tip Modal -->
+   <div id="tip-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-3xl p-8 text-center shadow-2xl max-w-md mx-4 border-4 border-amber-200">
+     <div class="text-5xl mb-4" id="tip-icon">
+      💡
+     </div>
+     <h2 id="tip-title" class="text-2xl font-black text-amber-700 mb-4"></h2>
+     <p id="tip-content" class="text-amber-900 text-base font-semibold mb-6 leading-relaxed"></p><button id="close-tip-btn" class="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-3 px-8 rounded-full shadow-lg">Entès ✓</button>
+    </div>
+   </div><!-- Series Completion Modal (Practice Mode) -->
+   <div id="series-completion" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-10 text-center shadow-2xl max-w-lg mx-4 border-4 border-blue-200">
+     <div class="text-7xl mb-4">
+      🎉
+     </div>
+     <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-3">Sèrie Completada!</h2>
+     <div class="bg-white rounded-2xl p-6 mb-6 shadow-lg">
+      <div class="grid grid-cols-2 gap-4">
+       <div>
+        <div class="text-3xl font-black text-purple-600">
+         <span id="series-points">0</span>
+        </div>
+        <div class="text-xs text-slate-600 font-bold uppercase">
+         Punts
+        </div>
+       </div>
+       <div>
+        <div class="text-3xl font-black text-emerald-600">
+         <span id="series-correct">0</span>/10
+        </div>
+        <div class="text-xs text-slate-600 font-bold uppercase">
+         Encerts
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="flex gap-3 justify-center"><button id="continue-btn" class="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transform hover:scale-105 transition-all">➜ Continuar (10 més)</button> <button id="finish-practice-btn" class="bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transform hover:scale-105 transition-all">✓ Acabar</button>
+     </div>
+    </div>
+   </div><!-- Competition End Modal -->
+   <div id="competition-end" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="bg-gradient-to-br from-orange-50 to-red-50 rounded-3xl p-10 text-center shadow-2xl max-w-lg mx-4 border-4 border-orange-200">
+     <div class="text-7xl mb-4">
+      🏆
+     </div>
+     <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-red-600 mb-3">Temps Acabat!</h2>
+     <div class="bg-white rounded-2xl p-6 mb-6 shadow-lg">
+      <div class="grid grid-cols-2 gap-4">
+       <div>
+        <div class="text-3xl font-black text-purple-600">
+         <span id="comp-points">0</span>
+        </div>
+        <div class="text-xs text-slate-600 font-bold uppercase">
+         Punts Totals
+        </div>
+       </div>
+       <div>
+        <div class="text-3xl font-black text-emerald-600">
+         <span id="comp-correct">0</span>
+        </div>
+        <div class="text-xs text-slate-600 font-bold uppercase">
+         Encerts
+        </div>
+       </div>
+       <div>
+        <div class="text-3xl font-black text-pink-600">
+         <span id="comp-streak">0</span>
+        </div>
+        <div class="text-xs text-slate-600 font-bold uppercase">
+         Millor Ratxa
+        </div>
+       </div>
+       <div>
+        <div class="text-3xl font-black text-orange-600">
+         <span id="comp-accuracy">0</span>%
+        </div>
+        <div class="text-xs text-slate-600 font-bold uppercase">
+         Precisió
+        </div>
+       </div>
+      </div>
+     </div><button id="back-from-comp-btn" class="mt-2 text-slate-600 hover:text-slate-800 font-bold underline">Tornar al menú</button>
+    </div>
+   </div>
+  </div>
+  <script>
+// Word database – 94 paraules (Oclusives Petaca i Bodega)
+const wordsData = [
+  // Bloc 1 - PETACA (P, T, C)
+  // P (7)
+  { word: "esparadrap", grafia: "p" },
+  { word: "cop", grafia: "p" },
+  { word: "galop", grafia: "p" },
+  { word: "xarop", grafia: "p" },
+  { word: "glop", grafia: "p" },
+  { word: "serp", grafia: "p" },
+  { word: "esquerp", grafia: "p" },
+  // T (17)
+  { word: "cunyat", grafia: "t" },
+  { word: "nebot", grafia: "t" },
+  { word: "humit", grafia: "t" },
+  { word: "neguit", grafia: "t" },
+  { word: "encantat", grafia: "t" },
+  { word: "edat", grafia: "t" },
+  { word: "panxut", grafia: "t" },
+  { word: "tossut", grafia: "t" },
+  { word: "mut", grafia: "t" },
+  { word: "gruixut", grafia: "t" },
+  { word: "eixut", grafia: "t" },
+  { word: "estatut", grafia: "t" },
+  { word: "institut", grafia: "t" },
+  { word: "punxegut", grafia: "t" },
+  { word: "benvingut", grafia: "t" },
+  { word: "joventut", grafia: "t" },
+  { word: "rot", grafia: "t" },
+  // C (10)
+  { word: "afalac", grafia: "c" },
+  { word: "albercoc", grafia: "c" },
+  { word: "festuc", grafia: "c" },
+  { word: "cec", grafia: "c" },
+  { word: "antic", grafia: "c" },
+  { word: "gallec", grafia: "c" },
+  { word: "barbamec", grafia: "c" },
+  { word: "estómac", grafia: "c" },
+  { word: "encàrrec", grafia: "c" },
+  
+  // Bloc 2 - BODEGA (B, D, G)
+  // B (3)
+  { word: "àrab", grafia: "b" },
+  { word: "destorb", grafia: "b" },
+  { word: "superb", grafia: "b" },
+  // D (10)
+  { word: "esplèndid", grafia: "d" },
+  { word: "òxid", grafia: "d" },
+  { word: "àrid", grafia: "d" },
+  { word: "fred", grafia: "d" },
+  { word: "sud", grafia: "d" },
+  { word: "aptitud", grafia: "d" },
+  { word: "altitud", grafia: "d" },
+  { word: "solitud", grafia: "d" },
+  { word: "plenitud", grafia: "d" },
+  { word: "lentitud", grafia: "d" },
+  { word: "esclavitud", grafia: "d" },
+  { word: "gratitud", grafia: "d" },
+  { word: "exactitud", grafia: "d" },
+  // G (5)
+  { word: "llarg", grafia: "g" },
+  { word: "pròdig", grafia: "g" },
+  { word: "amarg", grafia: "g" },
+  { word: "nàufrag", grafia: "g" },
+  { word: "fang", grafia: "g" }
+];
+
+// Theory tips
+const tips = {
+  "tip1": { 
+    title: "0️⃣ Vocal tònica o diftong", 
+    content: "Després de vocal tònica o diftong tònic escrivim P, T, C.\n\nExemples: llop, mut, nebot, cunyat, groc, foc" 
+  },
+  "tip2": { 
+    title: "1️⃣ Consonant o vocal àtona", 
+    content: "Després de consonant o vocal àtona, escrivim la mateixa lletra que apareix als derivats.\n\nExemples: àrab (arabesc), serp (serpentina), superb (supèrbia)" 
+  },
+  "tip3": { 
+    title: "2️⃣ Excepcions amb B, D, G", 
+    content: "Hi ha paraules que s'escriuen amb B, D, G després de vocal tònica.\n\nExemples: adob, fred, pedagog" 
+  },
+  "tip4": { 
+    title: "3️⃣ Noms femenins en -etud i -itud", 
+    content: "Els noms femenins acabats en -etud i -itud s'escriuen amb D.\n\nExemples: quietud, solitud" 
+  }
+};
+
+// Game state
+let currentMode = null;
+let startTimestamp = null;
+let attemptLog = [];
+let sentResult = false;
+
+let points = 0;
+let correctCount = 0;
+let errorCount = 0;
+let streak = 0;
+let bestStreak = 0;
+let currentWordIndex = 0;
+let shuffledWords = [];
+let currentWord = null;
+let wordsPerSeries = 10;
+let currentSeriesWords = 0;
+
+// Competition mode
+let timerInterval = null;
+let timeRemaining = 120;
+let isGameActive = false;
+
+const defaultConfig = {
+  activity_title: "🎯 Oclusives Petaca i Bodega",
+  instruction_text: "Completa la darrera lletra de la paraula: P, T, C (sordes) o B, D, G (sonores)"
+};
+
+function shuffleArray(array) {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+function showScreen(screenId) {
+  document.getElementById('main-menu').classList.add('hidden');
+  document.getElementById('game-screen').classList.add('hidden');
+  document.getElementById('series-completion').classList.add('hidden');
+  document.getElementById('competition-end').classList.add('hidden');
+  document.getElementById(screenId).classList.remove('hidden');
+}
+
+function startPracticeMode() {
+  currentMode = 'practice';
+  resetGameState();
+  startTimestamp = Date.now();
+  attemptLog = [];
+  sentResult = false;
+  shuffledWords = shuffleArray([...wordsData]);
+  document.getElementById('mode-indicator').textContent = '📚 Mode Pràctica';
+  document.getElementById('timer-container').classList.add('hidden');
+  document.getElementById('round-display').classList.remove('hidden');
+  showScreen('game-screen');
+  showNextWord();
+}
+
+function startCompetitionMode() {
+  currentMode = 'competition';
+  resetGameState();
+  startTimestamp = Date.now();
+  attemptLog = [];
+  sentResult = false;
+  shuffledWords = shuffleArray([...wordsData]);
+  timeRemaining = 120;
+  isGameActive = true;
+  document.getElementById('mode-indicator').textContent = '⏱️ Mode Competició';
+  document.getElementById('timer-container').classList.remove('hidden');
+  document.getElementById('round-display').classList.remove('hidden');
+  showScreen('game-screen');
+  startTimer();
+  showNextWord();
+}
+
+function startTimer() {
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    if (!isGameActive) { clearInterval(timerInterval); return; }
+    timeRemaining--;
+    updateTimerDisplay();
+    if (timeRemaining <= 0) { endCompetition(); }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const minutes = Math.floor(timeRemaining / 60);
+  const seconds = timeRemaining % 60;
+  document.getElementById('timer').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
+function endCompetition() {
+  isGameActive = false;
+  clearInterval(timerInterval);
+  const totalAttempts = correctCount + errorCount;
+  const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 0;
+  document.getElementById('comp-points').textContent = points;
+  document.getElementById('comp-correct').textContent = correctCount;
+  document.getElementById('comp-streak').textContent = bestStreak;
+  document.getElementById('comp-accuracy').textContent = accuracy;
+  document.getElementById('competition-end').classList.remove('hidden');
+  playCompletionSound();
+  createConfetti();
+  sendResultToPortal();
+}
+
+function resetGameState() {
+  points = 0; correctCount = 0; errorCount = 0; streak = 0; bestStreak = 0;
+  currentWordIndex = 0; currentSeriesWords = 0;
+  document.getElementById('points').textContent = '0';
+  document.getElementById('correct-count').textContent = '0';
+  document.getElementById('streak').textContent = '0';
+  document.getElementById('words-completed').textContent = '0';
+  document.getElementById('progress-bar').style.width = '0%';
+}
+
+function showNextWord() {
+  if (currentMode === 'practice' && currentSeriesWords >= wordsPerSeries) { showSeriesCompletion(); return; }
+  if (currentWordIndex >= shuffledWords.length) { shuffledWords = shuffleArray([...wordsData]); currentWordIndex = 0; }
+  currentWord = shuffledWords[currentWordIndex];
+  const wordDisplay = document.getElementById('current-word');
+
+  // Mostrar la paraula amb la darrera lletra oculta
+  let displayWord = currentWord.word;
+  if (displayWord.length > 0) {
+    displayWord = displayWord.slice(0, -1) + '_';
+  }
+  
+  wordDisplay.textContent = displayWord;
+  wordDisplay.style.animation = 'none';
+  setTimeout(() => { wordDisplay.style.animation = 'fadeIn 0.5s ease'; }, 10);
+
+  if (currentMode === 'practice') {
+    document.getElementById('words-completed').textContent = currentSeriesWords;
+    document.getElementById('progress-bar').style.width = (currentSeriesWords / wordsPerSeries) * 100 + '%';
+  } else {
+    document.getElementById('words-completed').textContent = correctCount;
+    document.getElementById('progress-bar').style.width = '100%';
+  }
+}
+
+function setupGrafiaButtons() {
+  document.querySelectorAll('.grafia-button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (!currentWord || !isGameActive) return;
+      const feedback = document.getElementById('feedback-message');
+      if (!feedback.classList.contains('hidden')) {
+        feedback.classList.add('hidden');
+      }
+      handleAnswer(btn.dataset.grafia);
+    });
+  });
+}
+
+function handleAnswer(selectedGrafia) {
+  if (!currentWord) return;
+  const isCorrect = selectedGrafia === currentWord.grafia;
+
+// 🔎 Guardam el detall per poder veure errades
+attemptLog.push({
+  numero: (currentMode === 'practice') ? (currentSeriesWords + 1) : (correctCount + errorCount + 1),
+  paraula: currentWord.word,
+  respostaUsuari: selectedGrafia,
+  respostaCorrecta: currentWord.grafia,
+  correcta: isCorrect
+});
+  if (isCorrect) {
+    streak++; if (streak > bestStreak) bestStreak = streak;
+    let pointsEarned = 10; if (streak >= 5) pointsEarned = 20; if (streak >= 10) pointsEarned = 30;
+    points += pointsEarned; correctCount++;
+    document.getElementById('points').textContent = points;
+    document.getElementById('correct-count').textContent = correctCount;
+    document.getElementById('streak').textContent = streak;
+    showFeedback(true, pointsEarned);
+  } else {
+    errorCount++; streak = 0; document.getElementById('streak').textContent = streak; showFeedback(false, 0);
+  }
+  currentWordIndex++; currentSeriesWords++;
+  setTimeout(showNextWord, 1500);
+}
+
+function showSeriesCompletion() {
+  isGameActive = false;
+  document.getElementById('series-points').textContent = points;
+  document.getElementById('series-correct').textContent = correctCount;
+  document.getElementById('series-completion').classList.remove('hidden');
+  playCompletionSound();
+}
+
+function continueNextSeries() {
+  currentSeriesWords = 0; isGameActive = true;
+  document.getElementById('series-completion').classList.add('hidden');
+  document.getElementById('words-completed').textContent = '0';
+  document.getElementById('progress-bar').style.width = '0%';
+  showNextWord();
+}
+
+function showTip(grafiaKey) {
+  const tip = tips[grafiaKey];
+  if (!tip) return;
+  document.getElementById('tip-title').textContent = tip.title;
+  document.getElementById('tip-content').textContent = tip.content;
+  document.getElementById('tip-modal').classList.remove('hidden');
+}
+
+// Sounds
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+function playCorrectSound() {
+  const o = audioContext.createOscillator(); const g = audioContext.createGain(); o.connect(g); g.connect(audioContext.destination);
+  o.frequency.setValueAtTime(523.25, audioContext.currentTime);
+  o.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1);
+  o.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2);
+  g.gain.setValueAtTime(0.3, audioContext.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+  o.start(audioContext.currentTime); o.stop(audioContext.currentTime + 0.4);
+}
+function playStreakSound() {
+  const o = audioContext.createOscillator(); const g = audioContext.createGain(); o.connect(g); g.connect(audioContext.destination);
+  o.type = 'triangle'; o.frequency.setValueAtTime(880, audioContext.currentTime);
+  o.frequency.exponentialRampToValueAtTime(1760, audioContext.currentTime + 0.2);
+  g.gain.setValueAtTime(0.4, audioContext.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+  o.start(audioContext.currentTime); o.stop(audioContext.currentTime + 0.3);
+}
+function playIncorrectSound() {
+  const o = audioContext.createOscillator(); const g = audioContext.createGain(); o.connect(g); g.connect(audioContext.destination);
+  o.type = 'sawtooth'; o.frequency.setValueAtTime(200, audioContext.currentTime);
+  o.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.3);
+  g.gain.setValueAtTime(0.2, audioContext.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+  o.start(audioContext.currentTime); o.stop(audioContext.currentTime + 0.3);
+}
+function playCompletionSound() {
+  [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => {
+    setTimeout(() => { const o = audioContext.createOscillator(); const g = audioContext.createGain(); o.connect(g); g.connect(audioContext.destination);
+      o.frequency.setValueAtTime(f, audioContext.currentTime);
+      g.gain.setValueAtTime(0.3, audioContext.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+      o.start(audioContext.currentTime); o.stop(audioContext.currentTime + 0.5); }, i * 100);
+  });
+}
+
+function showFeedback(isCorrect, pts) {
+  const feedback = document.getElementById('feedback-message');
+  const icon = document.getElementById('feedback-icon');
+  const text = document.getElementById('feedback-text');
+  const pointsText = document.getElementById('feedback-points');
+  const content = document.getElementById('feedback-content');
+  
+  if (isCorrect) {
+    if (streak >= 5) { playStreakSound(); } else { playCorrectSound(); }
+    icon.textContent = '✓'; text.textContent = currentWord.word; text.style.color = '#0f172a'; text.style.fontSize='3rem'; text.style.fontWeight='900'; content.style.borderColor = '#10b981';
+    pointsText.textContent = '+' + pts + ' punts'; pointsText.style.color = '#8b5cf6';
+    if (streak >= 5) { pointsText.textContent = '+' + pts + ' punts · 🔥 Increïble!'; }
+    if (streak >= 10) { pointsText.textContent = '+' + pts + ' punts · ⚡ Imparable!'; }
+  } else {
+    playIncorrectSound(); icon.textContent = '✗'; text.textContent = 'Incorrecte'; text.style.color = '#ef4444'; content.style.borderColor = '#ef4444';
+    pointsText.textContent = 'Correcte: ' + currentWord.grafia.toUpperCase(); pointsText.style.color = '#64748b';
+  }
+  feedback.classList.remove('hidden'); feedback.style.animation = 'fadeIn 0.3s ease';
+  setTimeout(() => { feedback.classList.add('hidden'); }, 2500);
+}
+
+function createConfetti() {
+  const colors = ['#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ef4444'];
+  for (let i = 0; i < 50; i++) {
+    setTimeout(() => {
+      const c = document.createElement('div'); c.className = 'confetti';
+      c.style.left = Math.random() * 100 + 'vw'; c.style.top = '-10px'; c.style.width = '10px'; c.style.height = '10px';
+      c.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      c.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+      c.style.transform = 'rotate(' + (Math.random() * 360) + 'deg)';
+      document.body.appendChild(c);
+      let y = -10; let x = parseFloat(c.style.left); let r = 0; const speed = 2 + Math.random() * 3; const drift = (Math.random() - 0.5) * 2;
+      const fall = setInterval(() => {
+        y += speed; x += drift; r += 5; c.style.top = y + 'px'; c.style.left = x + 'vw'; c.style.transform = 'rotate(' + r + 'deg)';
+        if (y > window.innerHeight) { clearInterval(fall); c.remove(); }
+      }, 20);
+    }, i * 30);
+  }
+}
+
+
+
+// ✅ Enviar resultat al portal (wrapper) via postMessage
+function sendResultToPortal() {
+  if (sentResult) return;
+
+  const total = correctCount + errorCount;
+  if (total <= 0) return;
+
+  const encerts = correctCount;
+  const errades = errorCount;
+  const tempsSegons = startTimestamp ? Math.round((Date.now() - startTimestamp) / 1000) : null;
+
+  const errors = attemptLog
+    .filter(x => !x.correcta)
+    .map(x => ({
+      pregunta: x.numero,
+      respostaUsuari: String(x.respostaUsuari).toUpperCase(),
+      respostaCorrecta: String(x.respostaCorrecta).toUpperCase(),
+      paraula: x.paraula
+    }));
+
+  window.parent.postMessage({
+    type: 'ACT_RESULT',
+    activityId: 'A4',
+    payload: { total, encerts, errades, tempsSegons, errors }
+  }, '*');
+
+  sentResult = true;
+}
+// Event Listeners
+document.getElementById('practice-mode-btn').addEventListener('click', () => { isGameActive = true; startPracticeMode(); });
+document.getElementById('competition-mode-btn').addEventListener('click', () => { isGameActive = true; startCompetitionMode(); });
+document.getElementById('back-to-menu-btn').addEventListener('click', () => { isGameActive = false; clearInterval(timerInterval); showScreen('main-menu'); });
+document.getElementById('continue-btn').addEventListener('click', () => { continueNextSeries(); });
+document.getElementById('finish-practice-btn').addEventListener('click', () => {
+  sendResultToPortal(); document.getElementById('series-completion').classList.add('hidden'); showScreen('main-menu'); });
+document.getElementById('back-from-comp-btn').addEventListener('click', () => { document.getElementById('competition-end').classList.add('hidden'); showScreen('main-menu'); });
+
+// Tip buttons
+document.getElementById('tip-1-btn').addEventListener('click', () => showTip('tip1'));
+document.getElementById('tip-2-btn').addEventListener('click', () => showTip('tip2'));
+document.getElementById('tip-3-btn').addEventListener('click', () => showTip('tip3'));
+document.getElementById('tip-4-btn').addEventListener('click', () => showTip('tip4'));
+document.getElementById('close-tip-btn').addEventListener('click', () => document.getElementById('tip-modal').classList.add('hidden'));
+
+// Optional SDK
+if (window.elementSdk) {
+  window.elementSdk.init({
+    defaultConfig,
+    onConfigChange: (config) => {
+      document.getElementById('main-title').innerHTML = config.activity_title || defaultConfig.activity_title;
+      document.getElementById('instruction-text').textContent = config.instruction_text || defaultConfig.instruction_text;
+    },
+    mapToCapabilities: () => ({ recolorables: [], borderables: [], fontEditable: undefined, fontSizeable: undefined }),
+    mapToEditPanelValues: (config) => new Map([
+      ['activity_title', (config && config.activity_title) || defaultConfig.activity_title],
+      ['instruction_text', (config && config.instruction_text) || defaultConfig.instruction_text]
+    ])
+  });
+}
+
+// Init
+(function init(){ setupGrafiaButtons(); })();
+  </script>
+</body>
+</html>

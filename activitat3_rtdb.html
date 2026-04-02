@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Activitat 3 — S sonora / S sorda</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 20px;">
+    <a href="unitats.html" class="btn-secundari" style="text-decoration:none;">← Tornar</a>
+    <div id="status" style="color:#555;"></div>
+  </div>
+
+  <section class="unit" style="padding-top:25px;">
+    <h2 class="unit-title" style="margin-bottom:25px;">Activitat 3 — S sonora / S sorda</h2>
+
+    <div style="max-width:980px;margin:0 auto;">
+      <iframe id="a3frame" src="activitat3_iframe.html" style="width:100%;height:850px;border:none;border-radius:22px;overflow:hidden;background:white;" allow="fullscreen"></iframe>
+      <p style="text-align:center;color:#666;margin-top:14px;">Quan acabis, el resultat s’enviarà automàticament al portal.</p>
+    </div>
+  </section>
+
+  <script type="module">
+    import { auth, rtdb } from "./firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { ref, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const status = document.getElementById("status");
+    const frame = document.getElementById("a3frame");
+    let currentUser = null;
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location = "login.html";
+        return;
+      }
+      currentUser = user;
+      status.textContent = `Sessió iniciada: ${user.email}`;
+    });
+
+    window.addEventListener("message", async (event) => {
+      if (!frame || event.source !== frame.contentWindow) return;
+      const data = event.data;
+      if (!data || data.type !== "A3_RESULT") return;
+      if (!currentUser) return;
+
+      try {
+        await push(ref(rtdb, "activitat3_resultats"), {
+          uid: currentUser.uid,
+          email: currentUser.email,
+          activitat: "A3",
+          encerts: data.payload.encerts,
+          total: data.payload.total,
+          errades: data.payload.errades,
+          tempsSegons: data.payload.tempsSegons,
+          errors: data.payload.errors || [],
+          timestamp: new Date().toISOString()
+        });
+        alert("✅ Resultat enviat i desat correctament!");
+      } catch (e) {
+        console.error(e);
+        alert("❌ No s'ha pogut desar el resultat (Realtime Database). Revisa regles i connexió.");
+      }
+    });
+  </script>
+
+</body>
+</html>

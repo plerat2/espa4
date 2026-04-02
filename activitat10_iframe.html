@@ -1,0 +1,769 @@
+<html lang="ca" style="font-size: 16px;"><head><meta content="text/html; charset=utf-8" http-equiv="Content-Type"/><!----><meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Ortografia Gamificada — v11 FINAL</title>
+<style>
+ body {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: #e0e0e0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+ }
+ html, body { height: 100%; width: 100%; }
+ .app-wrapper { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+ .container { background: rgba(30, 30, 50, 0.95); border-radius: 20px; padding: 40px; max-width: 1000px; width: 100%; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); border: 2px solid #00d4ff; }
+ .title { text-align: center; font-size: 2.5em; margin-bottom: 30px; background: linear-gradient(135deg, #00d4ff, #0099cc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: bold; }
+ .mode-selection { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+ .mode-btn { padding: 20px; border: 2px solid #00d4ff; background: rgba(0, 212, 255, 0.1); color: #00d4ff; border-radius: 15px; cursor: pointer; font-size: 1.2em; font-weight: bold; transition: all 0.3s ease; text-align: center; }
+ .mode-btn:hover { background: rgba(0, 212, 255, 0.3); transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3); }
+ /* PANTALLA DE JOC */
+ .game-screen { display: none; }
+ .game-screen.active { display: block; }
+ .header-game { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #00d4ff; }
+ .score-box { text-align: center; }
+ .score-label { font-size: 0.9em; color: #a0a0a0; margin-bottom: 5px; }
+ .score-value { font-size: 2em; color: #00ff88; font-weight: bold; }
+ .timer-box { text-align: center; }
+ .timer-label { font-size: 0.9em; color: #a0a0a0; margin-bottom: 5px; }
+ .timer-value { font-size: 2em; font-weight: bold; font-family: 'Courier New', monospace; }
+ .timer-value.danger { color: #ff3333; animation: pulse 0.5s infinite; }
+ .timer-value.normal { color: #00ff88; }
+ @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+ .round-box { text-align: center; color: #00d4ff; }
+ .game-container { background: rgba(0, 20, 40, 0.6); border-radius: 15px; padding: 30px; margin-bottom: 30px; border: 2px solid rgba(0, 212, 255, 0.3); }
+ .instruction { text-align: center; font-size: 1.1em; margin-bottom: 25px; color: #a0d4ff; }
+ .correct-words-display { background: rgba(0, 100, 50, 0.2); border: 2px solid #00ff88; border-radius: 10px; padding: 20px; margin-bottom: 20px; min-height: 80px; display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start; }
+ .correct-words-display .zone-label { width: 100%; color: #00ff88; font-weight: bold; }
+ .words-available { background: rgba(0, 50, 100, 0.3); border: 2px dashed #00d4ff; border-radius: 10px; padding: 20px; margin-bottom: 20px; min-height: 80px; display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start; }
+ .drop-zone { background: rgba(100, 50, 0, 0.2); border: 3px dashed #ff6666; border-radius: 10px; padding: 20px; min-height: 100px; display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start; }
+ .drop-zone.drag-over { background: rgba(255, 100, 100, 0.3); border-color: #ff6666; box-shadow: 0 0 20px rgba(255, 100, 100, 0.3); }
+ .zone-label { width: 100%; color: #a0a0a0; font-size: 0.9em; margin-bottom: 10px; }
+ .word-item { background: rgba(0, 212, 255, 0.2); border: 2px solid #00d4ff; padding: 12px 18px; border-radius: 8px; cursor: grab; user-select: none; color: #e0e0e0; font-weight: 500; transition: all 0.2s ease; white-space: nowrap; }
+ .word-item:hover { background: rgba(0, 212, 255, 0.4); transform: translateY(-3px); }
+ .word-item.dragging { opacity: 0.5; cursor: grabbing; }
+ .word-item.success { background: rgba(0, 255, 136, 0.3); border-color: #00ff88; color: #00ff88; cursor: default; }
+ .word-item.error { background: rgba(255, 51, 51, 0.3); border-color: #ff3333; color: #ff6666; cursor: default; }
+ .word-item.intrusa-left { background: rgba(255, 100, 100, 0.2); border: 2px solid #ff6666; color: #ffaa99; }
+ .feedback-message { position: fixed; top: 20px; right: 20px; background: rgba(0, 255, 136, 0.2); border: 2px solid #00ff88; color: #00ff88; padding: 15px 20px; border-radius: 10px; display: none; z-index: 1000; max-width: 400px; animation: slideIn 0.3s ease; }
+ .feedback-message.show { display: block; }
+ .feedback-message.error { background: rgba(255, 51, 51, 0.2); border-color: #ff3333; color: #ff6666; }
+ @keyframes slideIn { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
+ .button-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 30px; }
+ .btn { padding: 15px 20px; border: 2px solid #00d4ff; background: rgba(0, 212, 255, 0.15); color: #00d4ff; border-radius: 10px; cursor: pointer; font-size: 1em; font-weight: bold; transition: all 0.3s ease; }
+ .btn:hover:not(:disabled) { background: rgba(0, 212, 255, 0.3); transform: translateY(-2px); }
+ .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+ .btn-primary { grid-column: 1 / -1; background: rgba(0, 255, 136, 0.2); border-color: #00ff88; color: #00ff88; }
+ .btn-primary:hover:not(:disabled) { background: rgba(0, 255, 136, 0.4); }
+ /* PANTALLA INFORME */
+ .report-screen { display: none; text-align: center; }
+ .report-screen.active { display: block; }
+ .report-title { color: #00d4ff; font-size: 1.8em; margin-bottom: 20px; }
+ .report-content { background: rgba(0, 50, 100, 0.3); border: 2px solid #00d4ff; border-radius: 15px; padding: 20px; margin-bottom: 20px; text-align: left; }
+ .report-item { padding: 15px; border-bottom: 1px solid rgba(0, 212, 255, 0.2); display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+ .report-item:last-child { border-bottom: none; }
+ .report-label { color: #a0a0a0; font-weight: bold; }
+ .report-value { color: #00ff88; font-weight: bold; font-size: 1.1em; }
+ .report-error { color: #ff6666; }
+ .report-correct { color: #00ff88; }
+ .report-speed { color: #ffcc00; }
+ /* PANTALLA FINAL */
+ .end-screen { display: none; text-align: center; }
+ .end-screen.active { display: block; }
+ .final-score { font-size: 3em; color: #00ff88; font-weight: bold; margin: 30px 0; }
+ .end-message { font-size: 1.3em; margin-bottom: 30px; color: #a0d4ff; }
+ .register-btn { background: rgba(0, 212, 255, 0.2); border: 2px solid #00d4ff; padding: 15px 30px; margin: 10px; color: #00d4ff; border-radius: 10px; cursor: pointer; font-size: 1.1em; font-weight: bold; transition: all 0.3s ease; }
+ .register-btn:hover { background: rgba(0, 212, 255, 0.4); transform: translateY(-3px); }
+ .register-content { background: rgba(0, 20, 40, 0.8); border: 2px solid #00d4ff; border-radius: 15px; padding: 20px; margin: 20px 0; max-height: 300px; overflow-y: auto; text-align: left; }
+ .register-content h3 { color: #00d4ff; margin-top: 0; }
+ .register-item { padding: 10px; border-bottom: 1px solid rgba(0, 212, 255, 0.2); color: #e0e0e0; }
+ .register-item:last-child { border-bottom: none; }
+ .copy-btn { background: rgba(0, 255, 136, 0.2); border: 2px solid #00ff88; color: #00ff88; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 10px; transition: all 0.3s ease; }
+ .copy-btn:hover { background: rgba(0, 255, 136, 0.4); }
+ .copy-feedback { color: #00ff88; font-size: 0.9em; margin-top: 10px; display: none; }
+ .copy-feedback.show { display: block; }
+ .continue-btn { background: rgba(0, 255, 136, 0.2); border: 2px solid #00ff88; color: #00ff88; padding: 15px 30px; border-radius: 10px; cursor: pointer; font-size: 1.1em; font-weight: bold; margin: 10px; transition: all 0.3s ease; }
+ .continue-btn:hover { background: rgba(0, 255, 136, 0.4); transform: translateY(-3px); }
+ .home-btn { background: rgba(0, 212, 255, 0.15); border: 2px solid #00d4ff; color: #00d4ff; padding: 15px 30px; border-radius: 10px; cursor: pointer; font-size: 1.1em; font-weight: bold; margin: 10px; transition: all 0.3s ease; }
+ .home-btn:hover { background: rgba(0, 212, 255, 0.3); transform: translateY(-3px); }
+ .show-correct-btn { background: rgba(255, 200, 0, 0.2); border: 2px solid #ffcc00; color: #ffcc00; }
+ .show-correct-btn:hover { background: rgba(255, 200, 0, 0.4); }
+
+/* === Controls de mida tipogràfica (Mode Aula) === */
+.font-controls { display: flex; gap: 10px; align-items: center; }
+.font-controls .btn { min-width: 64px; font-weight: 800; }
+
+</style>
+<style>@view-transition { navigation: auto; }</style>
+
+
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.container{width:100%}@media (min-width: 640px){.container{max-width:640px}}@media (min-width: 768px){.container{max-width:768px}}@media (min-width: 1024px){.container{max-width:1024px}}@media (min-width: 1280px){.container{max-width:1280px}}@media (min-width: 1536px){.container{max-width:1536px}}</style><style>
+/* === Mode Daltonisme (CB) — paleta segura i patrons === */
+body.cb-mode { background: linear-gradient(135deg, #0d1117 0%, #161b22 100%); color: #e6edf3; }
+body.cb-mode .container { border-color: #f6c043; background: rgba(22,27,34,0.95); }
+body.cb-mode .title { background: linear-gradient(135deg, #f6c043, #2f81f7); -webkit-background-clip: text; background-clip: text; }
+body.cb-mode .correct-words-display { background: rgba(46,160,67,0.15); border-color:#2ea043; }
+body.cb-mode .words-available { background: rgba(47,129,247,0.15); border-color:#2f81f7; }
+body.cb-mode .drop-zone { background: repeating-linear-gradient(45deg, rgba(255,123,0,.08), rgba(255,123,0,.08) 10px, rgba(255,255,255,.04) 10px, rgba(255,255,255,.04) 20px); border-color:#ff7b00; }
+body.cb-mode .drop-zone.drag-over { background: repeating-linear-gradient(45deg, rgba(255,123,0,.18), rgba(255,123,0,.18) 10px, rgba(255,255,255,.06) 10px, rgba(255,255,255,.06) 20px); box-shadow:0 0 20px rgba(255,123,0,.35); }
+body.cb-mode .word-item { background: rgba(47,129,247,.18); border-color:#2f81f7; color:#e6edf3; }
+body.cb-mode .word-item:hover { background: rgba(47,129,247,.35); }
+body.cb-mode .word-item.success { background: rgba(46,160,67,.25); border-color:#2ea043; color:#2ea043; position:relative; }
+body.cb-mode .word-item.success::before { content:'✓'; font-weight:900; margin-right:.4rem; }
+body.cb-mode .word-item.error { background: rgba(255,123,0,.25); border-color:#ff7b00; color:#ffb86b; position:relative; }
+body.cb-mode .word-item.error::before { content:'!'; font-weight:900; margin-right:.4rem; }
+body.cb-mode .feedback-message { background: rgba(46,160,67,.18); border-color:#2ea043; color:#2ea043; }
+body.cb-mode .feedback-message.error { background: rgba(255,123,0,.2); border-color:#ff7b00; color:#ffb86b; }
+body.cb-mode .btn { border-color:#2f81f7; color:#2f81f7; background: rgba(47,129,247,.12); }
+body.cb-mode .btn-primary { background: rgba(46,160,67,.2); border-color:#2ea043; color:#2ea043; }
+body.cb-mode .btn:hover:not(:disabled){ background: rgba(47,129,247,.28); }
+body.cb-mode .report-title { color:#2f81f7; }
+body.cb-mode .report-content { background: rgba(47,129,247,.14); border-color:#2f81f7; }
+body.cb-mode .report-error { color:#ffb86b; }
+body.cb-mode .report-correct { color:#2ea043; }
+body.cb-mode .report-speed { color:#f6c043; }
+body.cb-mode .timer-value.normal { color:#2ea043; }
+body.cb-mode .timer-value.danger { color:#ff7b00; }
+</style></head>
+<body>
+<div class="app-wrapper">
+<div class="container">
+<!-- PANTALLA INICIAL -->
+<div class="mode-selection-screen" id="modeSelection">
+<h1 class="title">🎮 Ortografia Catalana</h1>
+<div class="mode-selection">
+<button class="mode-btn" onclick="startGame('serie')"> 📚 SÈRIE<br/><small>Sense cronòmetre</small> </button>
+<button class="mode-btn" onclick="startGame('competicio')"> ⚡ COMPETICIÓ<br/><small>2 minuts</small> </button>
+</div>
+</div>
+<!-- PANTALLA DE JOC -->
+<div class="game-screen" id="gameScreen">
+<div class="header-game">
+<div class="score-box">
+<div class="score-label">Punts Totals</div>
+<div class="score-value" id="score">0</div>
+</div>
+<div class="round-box">
+<div id="roundNumber">1/10</div>
+</div>
+<div class="timer-box" id="timerBox" style="display: none;">
+<div class="timer-label">Temps</div>
+<div class="timer-value normal" id="timerValue">2:00</div>
+</div>
+<div class="font-controls">
+<button class="btn" onclick="fontDown()">A−</button>
+<button class="btn" onclick="fontUp()">A+</button>
+<button class="btn" onclick="toggleCBMode()">👁️ Daltonisme</button></div>
+</div>
+<div class="game-container">
+<div class="instruction" id="instruction">
+          Arrossega les paraules correctes a la zona verda. Les intruses van a la zona vermella.
+        </div>
+<div class="correct-words-display" id="correctWordsDisplay" ondragleave="handleDragLeave(event)" ondragover="handleDragOver(event)" ondrop="handleDropCorrect(event)">
+<div class="zone-label">✓ Paraules correctes:</div>
+</div>
+<div class="words-available" id="wordsContainer">
+<div class="zone-label">📍 Paraules disponibles:</div>
+</div>
+<div class="drop-zone" id="dropZone" ondragleave="handleDragLeave(event)" ondragover="handleDragOver(event)" ondrop="handleDrop(event)">
+<div class="zone-label">⚠️ Intruses:</div>
+</div>
+</div>
+<div class="button-group">
+<button class="btn" id="finishSendBtn">✓ Acabar i enviar</button>
+<button class="btn" onclick="resetRound()">↻ Reiniciar</button>
+<button class="btn btn-primary" id="nextBtn" onclick="nextRound()" style="grid-column: 2 / -1;">Continua jugant →</button>
+</div>
+</div>
+<!-- PANTALLA INFORME -->
+<div class="report-screen" id="reportScreen">
+<h2 class="report-title">📊 Informe de la Ronda</h2>
+<div class="report-content" id="reportContent"></div>
+<button class="btn btn-primary" onclick="nextRound()">Continua jugant →</button>
+</div>
+<!-- PANTALLA FINAL -->
+<div class="end-screen" id="endScreen">
+<h2 style="color: #00d4ff; margin-top: 0;">🎉 Joc Finalitzat!</h2>
+<div class="final-score" id="finalScore">0</div>
+<div class="end-message" id="endMessage">Bona feina!</div>
+<button class="register-btn" onclick="toggleRegister()">📋 Generar Registre</button>
+<div id="registerContainer" style="display: none;">
+<div class="register-content" id="registerContent"></div>
+<button class="copy-btn" onclick="copyToClipboard()">📋 Copiar al portapaper</button>
+<div class="copy-feedback" id="copyFeedback">✓ Copiat al portapaper!</div>
+</div>
+<div style="margin-top: 30px;">
+<button class="continue-btn" onclick="restartGame()">▶️ Jugar de Nou</button>
+<button class="home-btn" onclick="goHome()">🏠 Menú Principal</button>
+</div>
+</div>
+</div>
+</div>
+<div class="feedback-message" id="feedbackMessage"></div>
+<script>
+// =========================
+// BASE DE DADES DE PARAULES
+// (mantenim la llista v10 amb correccions: bevíeu, movíem, ombrel·la...)
+// =========================
+const correctas = [
+  "acabar", "acabava", "acabaven", "acabaves", "acabàvem", "activitat", "ambició", "ambiciós",
+  "arbre", "automòbil", "avorrit", "basca", "bevíeu", "cantava", "cantaven", "cantaves", "cantàvem",
+  "canvi", "canviar", "conveni", "convenir", "conversa", "conversar", "embarcació", "embarcar",
+  "embenar", "embolic", "embolicar", "enveja", "envejós", "envelat", "enviament",
+  "enviar", "enviï", "envà", "govern", "gravació", "lloba", "movíem", "movien",
+  "movies", "movieu", "nevar", "ombra", "ombrel·la", "poble", "provar",
+  "abraçar", "alzines", "anàlisi", "arrissar", "asiàtics", "avisar", "basa", "base", "bassa",
+  "bellesa", "bossa", "braços", "brossa", "cansament", "cançó", "casa", "casos", "cassola", "caça",
+  "eivissenc", "ciutadans", "comerços", "conclusions", "concursos", "cosa", "crisi", "desembre",
+  "discussió", "disposava", "dissabte", "embussos", "emissora", "encisador", "enrossir", "esgotadora",
+  "esguard", "esmerçat", "esmorzar", "esperança", "esperava", "essa", "estrany", "estranyà",
+  "evasiva", "explorats",
+  "abric", "adob", "advocat", "antics", "arc", "atleta", "barbuts", "bec", "cabdals", "calfreds",
+  "caminant", "camp", "cant", "capçalera", "catàleg", "cec", "clàssic", "cognom", "magnitud", "càrrec",
+  "dic", "doblec", "drap", "dubte", "encàrrec", "esquerp", "estómac", "esvelt", "fang", "foc", "fred",
+  "fàstic", "gent", "gran", "grans", "grec", "groc", "latituds", "llamp", "llarg", "lletres", "llop",
+  "lúcid", "actitud",
+  "alumne", "tanmateix", "amfiteatre", "ampolla", "Anna", "any", "assumpta", "assumpte", "campió",
+  "canvi", "canviava", "circumstàncies", "commoció", "commemorar", "commoure", "compadir", "companyia",
+  "complaure", "comptes", "confiança", "confirmar", "confondre", "congelar", "conte", "convent",
+  "conviure", "tramvia", "desmuntava", "circumval·lació", "embellir", "embenar", "emmagatzemar",
+  "emmarcar", "emmetzinat", "emmudir", "emperador", "enfeinada", "enfonsar", "enfonsava", "enfornar",
+  "ennegrir", "enveja", "envellir", "esbandir", "immaterial", "enmig", "immediata", "immillorable",
+  "immillorables",
+  "afegir", "això", "ajuda", "ajuntament", "assaig", "assajar", "barreja", "boja", "boxa", "bruixa",
+  "butxaca", "capritx", "capritxós", "complex", "corregeixes", "corregir", "cuixa", "despatx",
+  "despatxar", "diumenge", "empatx", "empatxar", "endarrereix", "enginyer", "enveges", "injecció",
+  "escabetx", "escabetxar", "esquitx", "esquitxar", "estiueig", "estiuejant", "jeure", "exercicis",
+  "faig", "objectar", "fetge", "formatge", "fregirà", "Jesuïta", "gibrell", "gimnàs", "jeroglífic",
+  "ahir", "alcohol", "ham", "harmonia", "harmònica", "haver", "havia", "hemorràgia", "herba",
+  "hipòtesi", "hivern", "hivernacle", "hom", "home", "homicida", "homicidi", "hora", "hospital",
+  "humor", "subhasta", "tothom", "alegria", "allà", "al·lèrgia", "alzinar", "orxata", "orfe",
+  "hissar", "cacauet", "assassí", "Osca", "ou"
+];
+
+const intrusas = [
+  { incorrecta: "armonia", correcta: "harmonia" },
+  { incorrecta: "habia", correcta: "havia" },
+  { incorrecta: "decembre", correcta: "desembre" },
+  { incorrecta: "asaig", correcta: "assaig" },
+  { incorrecta: "geroglífic", correcta: "jeroglífic" },
+  { incorrecta: "inmillorable", correcta: "immillorable" },
+  { incorrecta: "conmemorar", correcta: "commemorar" },
+  { incorrecta: "tranvia", correcta: "tramvia" },
+  { incorrecta: "cambi", correcta: "canvi" },
+  { incorrecta: "magnitut", correcta: "magnitud" },
+  { incorrecta: "abogat", correcta: "advocat" },
+  { incorrecta: "dupte", correcta: "dubte" },
+  { incorrecta: "encàrreg", correcta: "encàrrec" },
+  { incorrecta: "actitut", correcta: "actitud" },
+  { incorrecta: "extrany", correcta: "estrany" },
+  { incorrecta: "esmorçar", correcta: "esmorzar" },
+  { incorrecta: "disabte", correcta: "dissabte" },
+  { incorrecta: "dillunsos", correcta: "dilluns" },
+  { incorrecta: "emisora", correcta: "emissora" },
+  { incorrecta: "pasa", correcta: "passa" },
+  { incorrecta: "moviem", correcta: "movíem" }
+];
+
+// =========================
+// STATE DEL JOC
+// =========================
+let gameState = {
+  mode: null,
+  round: 1,
+  score: 0,
+  roundScore: 0,
+  roundStartTime: 0,
+  timeLeft: 120,
+  timerInterval: null,
+  usedWords: [],
+  failedWords: [],
+  currentWords: [],
+  currentCorrectWords: [],
+  currentIntrusa: null,
+  draggedWords: {},
+  isRoundComplete: false,
+  showingSolutions: false, usedIntrusasIndices: []
+};
+// =========================
+// SEGUIMENT + ENVIAMENT AL PORTAL
+// =========================
+let sessionStartTimestamp = null;
+let attemptLog = [];
+let sentResult = false;
+
+function buildPortalPayload() {
+  const total = attemptLog.length;
+  const encerts = attemptLog.filter(x => x.correcta).length;
+  const errades = total - encerts;
+  const tempsSegons = sessionStartTimestamp ? Math.round((Date.now() - sessionStartTimestamp) / 1000) : null;
+
+  const errors = attemptLog
+    .filter(x => !x.correcta)
+    .map(x => ({
+      ronda: x.ronda,
+      accio: x.accio,
+      paraula: x.paraula,
+      respostaCorrecta: x.respostaCorrecta || null,
+      tempsRonda: x.tempsRonda || null
+    }));
+
+  return {
+    total,
+    encerts,
+    errades,
+    tempsSegons,
+    mode: gameState.mode || null,
+    score: gameState.score || 0,
+    errors
+  };
+}
+
+function sendResultToPortal() {
+  if (sentResult) return;
+  const payload = buildPortalPayload();
+  if (payload.total <= 0) return;
+
+  window.parent.postMessage({
+    type: 'ACT_RESULT',
+    activityId: 'A10',
+    payload
+  }, '*');
+
+  sentResult = true;
+}
+
+function logAttempt(entry) {
+  attemptLog.push(entry);
+}
+
+// =========================
+// INICIALITZACIÓ I NAVEGACIÓ
+// =========================
+function startGame(mode) {
+  sessionStartTimestamp = Date.now();
+  attemptLog = [];
+  sentResult = false;
+  // Estat base
+  gameState.mode = mode;
+  gameState.round = 1;
+  gameState.score = 0;
+  gameState.timeLeft = 120;
+  gameState.usedWords = [];
+  gameState.failedWords = [];
+  gameState.draggedWords = {};
+  gameState.isRoundComplete = false;
+  gameState.usedIntrusasIndices = [];
+  updateScoreUI();
+
+  // Pantalles
+  document.getElementById('modeSelection').style.display = 'none';
+  document.getElementById('reportScreen').classList.remove('active');
+  document.getElementById('endScreen').classList.remove('active');
+  document.getElementById('gameScreen').classList.add('active');
+
+  // Cronòmetre
+  document.getElementById('timerBox').style.display = (mode === 'competicio') ? 'block' : 'none';
+  if (mode === 'competicio') startTimer(); else if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+
+  // Neteja UI
+  cleanRoundUI();
+  updateRoundDisplay();
+
+  // Genera
+  generateRound();
+}
+
+function goHome() { sendResultToPortal(); restartGame(); }
+
+function restartGame() {
+  if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+  gameState = {
+    mode: null, round: 1, score: 0, roundScore: 0, roundStartTime: 0,
+    timeLeft: 120, timerInterval: null, usedWords: [], failedWords: [],
+    currentWords: [], currentCorrectWords: [], currentIntrusa: null,
+    draggedWords: {}, isRoundComplete: false, showingSolutions: false
+  };
+  document.getElementById('endScreen').classList.remove('active');
+  document.getElementById('reportScreen').classList.remove('active');
+  document.getElementById('gameScreen').classList.remove('active');
+  document.getElementById('modeSelection').style.display = 'block';
+  document.getElementById('registerContainer').style.display = 'none';
+}
+
+// =========================
+// RONDES
+// =========================
+function startTimer() {
+  if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+  gameState.timerInterval = setInterval(() => {
+    gameState.timeLeft--;
+    updateTimer();
+    if (gameState.timeLeft <= 0) {
+      clearInterval(gameState.timerInterval);
+      endGame();
+    }
+  }, 1000);
+}
+
+function updateTimer() {
+  const mins = Math.floor(gameState.timeLeft / 60);
+  const secs = gameState.timeLeft % 60;
+  const display = `${mins}:${secs.toString().padStart(2, '0')}`;
+  const timerElement = document.getElementById('timerValue');
+  timerElement.textContent = display;
+  if (gameState.timeLeft <= 30) {
+    timerElement.classList.remove('normal');
+    timerElement.classList.add('danger');
+  } else {
+    timerElement.classList.remove('danger');
+    timerElement.classList.add('normal');
+  }
+}
+
+function generateRound() {
+  if (gameState.round > 10) { endGame(); return; }
+  gameState.roundScore = 0;
+  gameState.draggedWords = {};
+  gameState.isRoundComplete = false;
+  gameState.usedIntrusasIndices = [];
+  updateScoreUI();
+  gameState.showingSolutions = false;
+  gameState.roundStartTime = Date.now();
+
+  // 3 o 4 paraules correctes
+  const numCorrectas = Math.random() > 0.5 ? 3 : 4;
+  const roundWords = [];
+  while (roundWords.length < numCorrectas) {
+    const word = correctas[Math.floor(Math.random() * correctas.length)];
+    if (!gameState.usedWords.includes(word) && !roundWords.includes(word)) {
+      roundWords.push(word);
+      gameState.usedWords.push(word);
+    }
+  }
+  gameState.currentCorrectWords = [...roundWords];
+
+  // 0 o 1 intrusa
+  const hasIntrusa = Math.random() > 0.6;
+  let selectedIntrusa = null;
+  const roundWordsWithIntrusa = [...roundWords];
+  if (hasIntrusa) {
+  if (!Array.isArray(gameState.usedIntrusasIndices)) gameState.usedIntrusasIndices = [];
+  let pool = intrusas.map((_,i)=>i).filter(i=>!gameState.usedIntrusasIndices.includes(i));
+  if (pool.length === 0) { gameState.usedIntrusasIndices = []; pool = intrusas.map((_,i)=>i); }
+  const idx = Math.floor(Math.random()*pool.length);
+  selectedIntrusa = intrusas[pool[idx]];
+  gameState.usedIntrusasIndices.push(pool[idx]);
+  roundWordsWithIntrusa.push(selectedIntrusa.incorrecta);
+}
+  gameState.currentWords = roundWordsWithIntrusa.sort(() => Math.random() - 0.5);
+  gameState.currentIntrusa = selectedIntrusa;
+
+  cleanRoundUI();
+  renderWords();
+  updateRoundDisplay();
+}
+
+function cleanRoundUI() {
+  document.getElementById('correctWordsDisplay').innerHTML = '<div class="zone-label">✓ Paraules correctes:</div>';
+  document.getElementById('dropZone').innerHTML = '<div class="zone-label">⚠️ Intruses:</div>';
+  const words = document.getElementById('wordsContainer');
+  words.innerHTML = '<div class="zone-label">📍 Paraules disponibles:</div>';
+  document.getElementById('feedbackMessage').classList.remove('show');
+  const report = document.getElementById('reportContent');
+  if (report) report.innerHTML = '';
+}
+
+function renderWords() {
+  const container = document.getElementById('wordsContainer');
+  container.innerHTML = '<div class="zone-label">📍 Paraules disponibles:</div>';
+  gameState.currentWords.forEach((word, index) => {
+    if (gameState.draggedWords[word] === undefined) {
+      const wordDiv = document.createElement('div');
+      wordDiv.className = 'word-item';
+      wordDiv.textContent = word;
+      wordDiv.draggable = true;
+      wordDiv.dataset.word = word;
+      wordDiv.dataset.index = index;
+      wordDiv.addEventListener('dragstart', dragStart);
+      wordDiv.addEventListener('dragend', dragEnd);
+      container.appendChild(wordDiv);
+    }
+  });
+}
+
+function dragStart(e) {
+  if (gameState.isRoundComplete) return;
+  const word = e.target.dataset.word;
+  if (gameState.draggedWords[word] !== undefined) return;
+  e.target.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('word', word);
+}
+
+function dragEnd(e) { e.target.classList.remove('dragging'); }
+
+function handleDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  document.getElementById('dropZone').classList.add('drag-over');
+}
+
+function handleDragLeave(e) {
+  if (e.target.id === 'dropZone') {
+    document.getElementById('dropZone').classList.remove('drag-over');
+  }
+}
+
+function handleDropCorrect(e) {
+  e.preventDefault();
+  document.getElementById('correctWordsDisplay').classList.remove('drag-over');
+  const word = e.dataTransfer.getData('word');
+  if (!word) return;
+  const isIntrusa = gameState.currentIntrusa && gameState.currentIntrusa.incorrecta === word;
+  const isCorrect = !isIntrusa && correctas.includes(word);
+  if (!isCorrect) return; // no es poden arrossegar incorrectes aquí
+
+  const elapsedTime = (Date.now() - gameState.roundStartTime) / 1000;
+  let points = 100;
+  if (elapsedTime < 10) points = 150;
+  else if (elapsedTime < 30) points = 100 + Math.max(0, 50 - (elapsedTime - 10) * 2);
+  else points = Math.max(20, 100 - (elapsedTime - 30));
+
+  logAttempt({ronda: gameState.round, accio: 'correcte', paraula: word, correcta: true, tempsRonda: elapsedTime});
+ showFeedback(`✓ Correcte: "${word}" (+${Math.floor(points)} punts)`, 'success');
+  gameState.roundScore += Math.floor(points);
+  updateScoreUI();
+  gameState.draggedWords[word] = { correct: true, points: Math.floor(points), time: elapsedTime };
+  markWordSuccess(word);
+  renderWords();
+  checkRoundComplete();
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').classList.remove('drag-over');
+  const word = e.dataTransfer.getData('word');
+  if (!word) return;
+  const hasIntrusa = !!gameState.currentIntrusa;
+  const isIntrusa = hasIntrusa && gameState.currentIntrusa.incorrecta === word;
+  const isCorrect = !isIntrusa && correctas.includes(word);
+  const elapsedTime = (Date.now() - gameState.roundStartTime) / 1000;
+
+  if (isIntrusa) {
+    logAttempt({ronda: gameState.round, accio: 'intrusa', paraula: word, respostaCorrecta: gameState.currentIntrusa.correcta, correcta: false});
+ showFeedback('❌ Intrusa! La correcta és: "' + gameState.currentIntrusa.correcta + '"', 'error');
+    gameState.draggedWords[word] = { correct: false, points: 0 };
+    markWordError(word);
+  } else if (isCorrect) {
+    logAttempt({ronda: gameState.round, accio: 'correcta_a_intruses', paraula: word, correcta: false});
+ showFeedback('❌ Aquesta paraula és correcta i no va a la zona d\'intruses', 'error');
+    gameState.draggedWords[word] = { correct: false, points: 0 };
+    markWordError(word);
+  } else {
+    return;
+  }
+  renderWords();
+  checkRoundComplete();
+}
+
+
+function markWordSuccess(word) {
+  const correctDisplay = document.getElementById('correctWordsDisplay');
+  const wordDiv = document.createElement('div');
+  wordDiv.className = 'word-item success';
+  wordDiv.textContent = word;
+  wordDiv.draggable = false;
+  correctDisplay.appendChild(wordDiv);
+}
+
+function markWordError(word) {
+  const dropZone = document.getElementById('dropZone');
+  const wordDiv = document.createElement('div');
+  wordDiv.className = 'word-item error';
+  wordDiv.textContent = word;
+  wordDiv.draggable = false;
+  dropZone.appendChild(wordDiv);
+}
+
+function showFeedback(message, type = 'success') {
+  const feedbackEl = document.getElementById('feedbackMessage');
+  feedbackEl.textContent = message;
+  feedbackEl.classList.remove('error', 'success');
+  feedbackEl.classList.add(type, 'show');
+  setTimeout(() => { feedbackEl.classList.remove('show'); }, 3000);
+}
+
+function checkRoundComplete() {
+  const allWords = gameState.currentWords.length;
+  const draggedCount = Object.keys(gameState.draggedWords).length;
+  if (draggedCount === allWords) {
+    gameState.isRoundComplete = true;
+    showReport();
+  }
+}
+
+function showReport() {
+  const reportContent = document.getElementById('reportContent');
+  let html = '';
+  gameState.currentWords.forEach(word => {
+    const dragInfo = gameState.draggedWords[word];
+    if (dragInfo) {
+      if (!dragInfo.correct) {
+        const intrusa = gameState.currentIntrusa;
+        html += `<div class="report-item">\n<div class="report-label">✗ ${word}</div>\n<div class="report-value report-error">→ ${intrusa.correcta}</div>\n</div>`;
+      } else {
+        html += `<div class="report-item">\n<div class="report-label">✓ ${word}</div>\n<div class="report-value report-correct">${dragInfo.points} punts</div>\n</div>`;
+      }
+    }
+  });
+  if (gameState.currentIntrusa && gameState.draggedWords[gameState.currentIntrusa.incorrecta] === undefined) {
+    html += `<div class="report-item">\n<div class="report-label">⚠️ ${gameState.currentIntrusa.incorrecta}</div>\n<div class="report-value report-error">No tocada (correcta: ${gameState.currentIntrusa.correcta})</div>\n</div>`;
+  }
+  if (html === '') {
+    html = `<div class="report-item" style="text-align: center; color: #00ff88; padding: 30px;"><strong>✓ Perfecte! No has errat cap paraula!</strong></div>`;
+  } else {
+    html += `<div class="report-item" style="border-top: 2px solid #00d4ff; margin-top: 20px; padding-top: 20px;">\n<div class="report-label">Punts aquesta ronda:</div>\n<div class="report-value report-speed">${gameState.roundScore}</div>\n</div>`;
+  }
+  reportContent.innerHTML = html;
+  gameState.score += gameState.roundScore;
+  updateScoreUI();
+  // canvi de pantalla
+  document.getElementById('gameScreen').classList.remove('active');
+  document.getElementById('reportScreen').classList.add('active');
+}
+
+function nextRound() {
+  if (!gameState.isRoundComplete) {
+    showFeedback("Has d'arrossegar totes les paraules!", 'error');
+    return;
+  }
+  continueToNextRound();
+}
+
+function continueToNextRound() {
+  gameState.round++;
+  document.getElementById('reportScreen').classList.remove('active');
+  if (gameState.round > 10) { endGame(); }
+  else {
+    document.getElementById('gameScreen').classList.add('active');
+    cleanRoundUI();
+    generateRound();
+  }
+}
+
+function resetRound() {
+  gameState.draggedWords = {};
+  gameState.isRoundComplete = false;
+  gameState.usedIntrusasIndices = [];
+  updateScoreUI();
+  gameState.showingSolutions = false;
+  gameState.roundStartTime = Date.now();
+  cleanRoundUI();
+  renderWords();
+  updateScoreUI();
+}
+
+function updateRoundDisplay() {
+  document.getElementById('roundNumber').textContent = `${gameState.round}/10`;
+}
+
+function endGame() {
+  sendResultToPortal();
+  if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+  document.getElementById('gameScreen').classList.remove('active');
+  document.getElementById('reportScreen').classList.remove('active');
+  document.getElementById('endScreen').classList.add('active');
+  document.getElementById('finalScore').textContent = gameState.score;
+  const message = gameState.score > 8000 ? '🏆 Increïble!' :
+                  gameState.score > 6000 ? '⭐ Molt bé!' :
+                  gameState.score > 4000 ? '👍 Bona feina!' : '💪 Continua practicant!';
+  document.getElementById('endMessage').textContent = message;
+  try {
+    localStorage.setItem('ortografia_last_score', String(gameState.score));
+    const raw = localStorage.getItem('ortografia_top5') || '[]';
+    const top = JSON.parse(raw);
+    const entry = { score: gameState.score, ts: Date.now(), mode: gameState.mode };
+    top.push(entry);
+    top.sort((a,b)=>b.score-a.score);
+    localStorage.setItem('ortografia_top5', JSON.stringify(top.slice(0,5)));
+  } catch(e) { }
+}
+
+// =========================
+// REGISTRE
+// =========================
+function toggleRegister() {
+  const container = document.getElementById('registerContainer');
+  if (container.style.display === 'none') {
+    generateRegister();
+    container.style.display = 'block';
+  } else {
+    container.style.display = 'none';
+  }
+}
+
+function generateRegister() {
+  const content = document.getElementById('registerContent');
+  let html = '';
+  if (gameState.failedWords.length > 0) {
+    html += '<h3>❌ Paraules que has errat:</h3>';
+    gameState.failedWords.forEach(item => {
+      html += `<div class="register-item"><strong>${item.incorrecta}</strong> → <span style="color: #00ff88;">${item.correcta}</span></div>`;
+    });
+  } else {
+    html += '<div class="register-item" style="color: #00ff88;">✓ No has errat cap paraula!</div>';
+  }
+  content.innerHTML = html;
+}
+
+function copyToClipboard() {
+  const content = document.getElementById('registerContent');
+  const text = content.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    const feedback = document.getElementById('copyFeedback');
+    feedback.classList.add('show');
+    setTimeout(() => feedback.classList.remove('show'), 2000);
+  });
+}
+
+
+// Botó per acabar abans
+const finishBtn = document.getElementById('finishSendBtn');
+if (finishBtn) {
+  finishBtn.addEventListener('click', () => {
+    sendResultToPortal();
+    showFeedback('✅ Resultat enviat al portal', 'success');
+    finishBtn.disabled = true;
+  });
+}
+</script>
+<script>
+  // === Zoom tipogràfic persistent (Mode Aula) ===
+  const FONT_STEP = 2;
+  const MIN_HTML_PX = 16;
+  const MAX_HTML_PX = 26;
+  const FONT_KEY = 'ui_html_font_px_v1';
+  function getHtmlPx(){ const s=parseInt(localStorage.getItem(FONT_KEY)||'0',10); if(s) return s; const c=parseInt(getComputedStyle(document.documentElement).fontSize,10)||18; return Math.min(MAX_HTML_PX, Math.max(MIN_HTML_PX, c)); }
+  function setHtmlPx(px){ const v=Math.min(MAX_HTML_PX, Math.max(MIN_HTML_PX, px)); document.documentElement.style.fontSize = v+'px'; localStorage.setItem(FONT_KEY, v); }
+  function fontUp(){ setHtmlPx(getHtmlPx()+FONT_STEP); }
+  function fontDown(){ setHtmlPx(getHtmlPx()-FONT_STEP); }
+  (function(){ setHtmlPx(getHtmlPx()); })();
+</script>
+<script>
+const CB_KEY = 'ui_cb_mode_v1';
+function applyCBModeFromStorage(){ const active = localStorage.getItem(CB_KEY) === '1'; document.body.classList.toggle('cb-mode', active); }
+function toggleCBMode(){ const newVal = !(localStorage.getItem(CB_KEY) === '1'); localStorage.setItem(CB_KEY, newVal ? '1' : '0'); applyCBModeFromStorage(); }
+(function(){ applyCBModeFromStorage(); })();
+</script>
+<script>
+function updateScoreUI(){
+  try { document.getElementById('score').textContent = (gameState.score + (gameState.roundScore||0)); } catch(e){}
+}
+</script>
+
+</body>
+</html>

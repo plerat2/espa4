@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Posa l’accent i/o la dièresi si cal — (v3.8)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *{font-family:'Poppins',system-ui,Segoe UI,Roboto,Arial}
+    .char{cursor:pointer; padding:.05rem .15rem; border-radius:.375rem; display:inline-block}
+    .char:hover{background:#e2e8f0}
+    .accent-pop{position:absolute; background:white; border:1px solid #e5e7eb; border-radius:.75rem; box-shadow:0 15px 35px rgba(0,0,0,.12); padding:.5rem; z-index:50}
+    .accent-pop .choices{display:flex; gap:.35rem; align-items:center; justify-content:center}
+    .accent-pop button{font-size:clamp(2.2rem, 7vw, 4rem); line-height:1; padding:.2rem .4rem; min-width:2.6rem; border-radius:.5rem; border:1px solid #e5e7eb; background:#f8fafc}
+    .accent-pop button:hover{background:#eef2f7}
+    .accent-pop .hint{font-size:.8rem; color:#64748b; text-align:center; margin-top:.25rem}
+    .card{animation:pop .25s ease}
+    .shake{animation:shake .35s ease}
+    @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+    .btn{transition:all .15s ease}
+    .btn:hover{transform:translateY(-1px)}
+    .accented{font-size:clamp(3.6rem, 10vw, 8.5rem); line-height:1; color:#0f172a; animation:growPop .18s ease-out}
+    @keyframes growPop{0%{transform:scale(.88)}100%{transform:scale(1)}}
+    .toast{position:fixed; left:50%; top:1rem; transform:translateX(-50%); background:#0ea5e9; color:white; padding:.6rem 1rem; border-radius:999px; box-shadow:0 10px 25px rgba(0,0,0,.12); z-index:70}
+    .turn-banner{position:fixed; top:64px; left:50%; transform:translateX(-50%); color:white; font-weight:800; padding:.5rem 1rem; border-radius:9999px; box-shadow:0 10px 25px rgba(0,0,0,.15); z-index:60; animation:slideDown .35s ease}
+    @keyframes slideDown{0%{opacity:0; transform:translate(-50%,-10px)}100%{opacity:1; transform:translate(-50%,0)}}
+    .turn-flash{animation:turnFlash 700ms ease-out}
+    @keyframes turnFlash{0%{box-shadow:0 0 0 0 var(--team-color, rgba(2,132,199,.35))}50%{box-shadow:0 0 0 14px var(--team-color, rgba(2,132,199,.18))}100%{box-shadow:0 0 0 0 var(--team-color, rgba(2,132,199,0))}}
+    .modal-bg{position:fixed; inset:0; background:rgba(0,0,0,.5); display:flex; align-items:center; justify-content:center; z-index:80}
+    .modal{background:linear-gradient(135deg,#fff,#f8fafc); border:1px solid #e5e7eb; border-radius:1.25rem; padding:1.25rem; width:min(720px,92vw); box-shadow:0 25px 70px rgba(0,0,0,.15)}
+    .pill{display:inline-flex; align-items:center; gap:.4rem; padding:.35rem .7rem; border-radius:999px; border:1px solid #e5e7eb; background:#fff}
+  </style>
+
+<style>
+.tip-card{position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); background:#fff; border:2px solid #0ea5e9; color:#0f172a; padding:18px 20px; border-radius:14px; box-shadow:0 24px 60px rgba(2,132,199,.28); z-index:121; width:min(700px,92vw);} .tip-card h4{margin:0 0 8px; font-weight:800; color:#0369a1} .tip-card p{margin:0; color:#334155; line-height:1.35} .tip-hide{display:none} .tip-backdrop{position:fixed; inset:0; background:rgba(15,23,42,.35); z-index:120}</style>
+
+</head>
+<body class="min-h-screen bg-gradient-to-br from-sky-50 to-white">
+<div id="tipBackdrop" class="tip-backdrop tip-hide"></div>
+<div id="tipCard" class="tip-card tip-hide"><h4>ℹ️ TIP de dièresi</h4><p id="tipText">—</p></div>
+  <div class="max-w-7xl mx-auto p-4 md:p-8">
+    <header class="text-center mb-6">
+      <h1 class="text-2xl md:text-4xl font-extrabold text-slate-800">Posa l’accent i/o la dièresi si cal</h1>
+      <p class="text-slate-700">Ara amb botó <strong>“No té cap accent o dièresi”</strong> i distractors de Barreja <strong>garantits</strong>.</p>
+    </header>
+
+    <div class="grid md:grid-cols-3 gap-3 mb-4 items-center">
+      <div class="card rounded-2xl bg-white border border-slate-200 p-4 flex items-center gap-2">
+        <label class="text-slate-700 font-semibold">Mode:</label>
+        <select id="modeSel" class="px-3 py-2 border border-slate-300 rounded-xl">
+          <option value="solo">Individual</option>
+          <option value="teams">Equips</option>
+        </select>
+      </div>
+      <div class="card rounded-2xl bg-white border border-slate-200 p-4 flex items-center gap-2">
+        <label class="text-slate-700 font-semibold">Paraules per sèrie:</label>
+        <select id="seriesLen" class="px-3 py-2 border border-slate-300 rounded-xl">
+          <option>10</option><option>20</option><option>30</option>
+        </select>
+      </div>
+      <div class="card rounded-2xl bg-white border border-slate-200 p-4 flex items-center gap-2">
+        <label class="text-slate-700 font-semibold">Tipus de pràctica:</label>
+        <select id="practiceType" class="px-3 py-2 border border-slate-300 rounded-xl">
+          <option value="mix">Barreja</option>
+          <option value="accent">Només accents (à/è-é/í/ò-ó/ú)</option>
+          <option value="diaeresi">Només dièresi (ï/ü)</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="hudSolo" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+      <div class="card rounded-2xl bg-white border border-slate-200 p-4 text-center"><div class="text-xs text-slate-500 font-bold uppercase">Punts</div><div id="points" class="text-2xl font-extrabold">0</div></div>
+      <div class="card rounded-2xl bg-white border border-slate-200 p-4 text-center"><div class="text-xs text-slate-500 font-bold uppercase">Encerts</div><div id="correct" class="text-2xl font-extrabold">0</div></div>
+      <div class="card rounded-2xl bg-white border border-slate-200 p-4 text-center"><div class="text-xs text-slate-500 font-bold uppercase">Ratxa</div><div id="streak" class="text-2xl font-extrabold">0</div></div>
+      <div class="card rounded-2xl bg-white border border-slate-200 p-4 text-center"><div class="text-xs text-slate-500 font-bold uppercase">Progrés</div><div class="text-2xl font-extrabold"><span id="done">0</span>/<span id="total">0</span></div></div>
+    </div>
+
+    <div id="hudTeams" class="hidden grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+      <div class="card rounded-2xl bg-white border border-slate-200 p-4">
+        <div class="flex items-center gap-2 mb-2"><span class="text-xs text-slate-500 font-bold uppercase">Equip A</span><input id="teamAName" value="Equip A" class="px-2 py-1 border border-slate-300 rounded-lg w-40" /></div>
+        <div class="text-2xl font-extrabold text-sky-700">Punts: <span id="teamAScore">0</span> · Encerts: <span id="teamACorr">0</span></div>
+      </div>
+      <div class="card rounded-2xl bg-white border border-slate-200 p-4">
+        <div class="flex items-center gap-2 mb-2"><span class="text-xs text-slate-500 font-bold uppercase">Equip B</span><input id="teamBName" value="Equip B" class="px-2 py-1 border border-slate-300 rounded-lg w-40" /></div>
+        <div class="text-2xl font-extrabold text-emerald-700">Punts: <span id="teamBScore">0</span> · Encerts: <span id="teamBCorr">0</span></div>
+      </div>
+      <div class="md:col-span-2 text-center text-slate-700 font-semibold">Torn de: <span id="turnName">—</span></div>
+    </div>
+
+    <main id="mainCard" class="card rounded-3xl bg-white border-4 border-slate-200 shadow-sm p-6 mb-2 relative">
+      <div class="text-center mb-2">
+        <div class="text-xs md:text-sm text-slate-500 font-semibold uppercase tracking-wider"></div>
+        <div id="word" class="text-5xl md:text-7xl font-black text-slate-900 mt-2">—</div>
+      </div>
+      <div class="text-center">
+        <button id="start" class="px-6 py-3 rounded-full bg-slate-900 text-white font-bold hover:bg-slate-800 btn">Comença</button>
+        <button id="noAccentBtn" class="ml-2 px-4 py-2 rounded-full border border-slate-300 text-slate-800 bg-slate-50 hover:bg-white btn">✅ No té cap accent o dièresi</button>
+      <button id="finishSendBtn" class="ml-2 px-4 py-2 rounded-full bg-emerald-600 text-white font-bold hover:bg-emerald-700 btn">✓ Acabar i enviar</button>
+      </div>
+    </main>
+
+    <div id="learnHint" class="hidden text-center text-base md:text-lg text-slate-700 mb-6"></div>
+
+    <div id="toast" class="toast hidden"></div>
+    <div id="turnBanner" class="turn-banner hidden"></div>
+
+    <div id="endModal" class="modal-bg hidden">
+      <div class="modal">
+        <div class="text-center mb-4">
+          <div class="text-5xl mb-2">🎉</div>
+          <h2 class="text-2xl md:text-3xl font-extrabold text-slate-800 mb-1">Sèrie completada</h2>
+          <div class="text-slate-600 text-sm">Resultats de la sèrie</div>
+        </div>
+        <div id="endStatsSolo" class="grid grid-cols-3 gap-3 mb-4">
+          <div class="pill"><span>🏅</span><span>Punts:</span><strong id="endPoints">0</strong></div>
+          <div class="pill"><span>✅</span><span>Encerts:</span><strong id="endCorrect">0</strong></div>
+          <div class="pill"><span>🔥</span><span>Millor ratxa:</span><strong id="endBest">0</strong></div>
+        </div>
+        <div id="endStatsTeams" class="hidden grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+          <div class="pill" style="border-color:#0284c7"><span>🟦</span><span id="endTeamA">Equip A</span><span>—</span><strong id="endAScore">0</strong> pts · <strong id="endACorr">0</strong> encerts</div>
+          <div class="pill" style="border-color:#059669"><span>🟩</span><span id="endTeamB">Equip B</span><span>—</span><strong id="endBScore">0</strong> pts · <strong id="endBCorr">0</strong> encerts</div>
+        </div>
+        <div class="flex flex-wrap justify-center gap-2 mt-2">
+          <button id="btnRepeat" class="px-5 py-2 rounded-full bg-slate-900 text-white font-bold hover:bg-slate-800">🔁 Repetir sèrie</button>
+          <button id="btnNew" class="px-5 py-2 rounded-full bg-sky-600 text-white font-bold hover:bg-sky-700">▶️ Nova sèrie</button>
+          <button id="btnMenu" class="px-5 py-2 rounded-full bg-white text-slate-800 font-bold border border-slate-300 hover:bg-slate-50">🏠 Tornar al menú</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+const WITH_ACCENT = ["cautxú", "oboè", "oceà", "però", "timpà", "xassís", "alvèol", "amoníac", "austríac", "cardíac", "càstig", "conèixer", "córrer", "créixer", "etíop", "intèrfon", "leucòcit", "magnetòfon", "merèixer", "míssil", "omòplat", "parèixer", "policíac", "rèptil", "témer", "termòstat", "tèxtil", "tórcer", "vèncer", "zodíac", "aurèola", "diòptria", "èczema", "elèctrode", "Etiòpia", "Himàlaia", "olimpíada", "període", "pneumònia", "rubèola", "barnús", "església", "còpia", "ràfega", "bústia", "tragèdia", "concórrer", "això", "ànec", "usuària", "Àngel", "dipòsit", "València", "matalàs", "fórmula", "tabú", "açò", "Júlia", "lliçó", "plàtan", "catàleg", "Sònia", "essències", "Dénia", "cançó", "tómbola", "pingüí", "àrbitre", "menjàvem", "sòlid", "fluïdesa", "trapezoïdal", "arcaïtzant", "europeïtzant", "heroïcitat", "traïdor", "continuïtat", "espontaneïtat", "heterogeneïtat", "suïcidi", "diürètic", "agrairé", "exàmens", "fenòmens", "orígens", "aïllar", "aïllament", "aïllats", "raïm", "raïms", "agraïment", "agraïm", "agraïa", "traïció", "traïdoria", "veïna", "veïnes", "veïnat", "veïnatge", "saïm", "roïna", "roïnes", "qüestió", "qüestions", "qüestionari", "qüestionaris", "freqüència", "freqüències", "freqüent", "freqüents", "lingüista", "lingüístic", "lingüística", "lingüístics", "lingüístiques", "bilingüe", "trilingüe", "multilingüe", "paraigües", "contigüitat", "ambigüitat", "seqüència", "seqüències", "conseqüència", "conseqüències", "conseqüent", "delinqüent", "delinqüència", "pingüins", "contraindicació", "reincidència", "reduïa", "reduïes", "reduïen", "traduïa", "traduïes", "traduïen", "reduíem", "reduíeu", "traduíem", "traduíeu"];
+const NO_ACCENT = ["misogin", "alfil", "avar", "ciclop", "criquet", "elit", "fluor", "futbol", "handbol", "hoquei", "humit", "interval", "misantrop", "policrom", "quilogram", "radar", "Raimon", "tiquet", "xandall", "xiclet", "examen", "dilluns", "comprem", "aigua", "dia", "llapis", "oxigen", "virus", "tennis", "individu", "paper", "correu", "espinacs", "Ramon", "compren", "fideu", "trapezoide", "arcaic", "europeu", "heroi", "egoisme", "heroisme", "europeista", "introduirem", "produir", "produiries", "conduint", "laic", "antiinflamatori", "preindustrial", "creia", "queia", "duia", "deia", "veia", "antiguitat"];
+const NO_DIA_DOUBTS = ["arcaic", "laic", "europeu", "heroi", "introduirem", "produir", "produiries", "conduint", "antiinflamatori", "preindustrial", "creia", "queia", "duia", "deia", "veia", "agrair", "conduir", "traduir", "reduir", "disminuir", "construir", "destruir", "oferir", "decidir", "patir", "agraint", "traduint", "reduint", "produint", "disminuint", "construint", "destruint", "oferint", "decidint", "patint", "agrairia", "conduiria", "traduiria", "reduiria", "produiria", "disminuiria", "construiria", "destruiria", "oferiria", "decidiria", "patiria"]; // distractors per MIX (mai en "Només dièresi")
+
+function stripAccents(s){
+  const map = {'à':'a','á':'a','è':'e','é':'e','í':'i','ï':'i','ò':'o','ó':'o','ú':'u','ü':'u','À':'A','Á':'A','È':'E','É':'E','Í':'I','Ï':'I','Ò':'O','Ó':'O','Ú':'U','Ü':'U'};
+  return s.replace(/[àáèéíïòóúüÀÁÈÉÍÏÒÓÚÜ]/g, ch => map[ch]||ch);
+}
+function isVowel(ch){return /[aeiouAEIOU]/.test(ch)}
+const hasAccent = s => /[àèéíòóú]/.test(s);
+const hasDia    = s => /[ïü]/.test(s);
+
+let wordsData = [
+  ...WITH_ACCENT.map(sol => ({ solution: sol, base: stripAccents(sol), needs: 'accent' })),
+  ...NO_ACCENT.map(sol => ({ solution: sol, base: sol, needs: 'none' }))
+];
+
+// --- Decks per evitar repeticions
+let deckAccent = [], deckDia = [], deckMix = [];
+function poolByType(){
+  const allAcc = wordsData.filter(x=>x.needs==='accent');
+  const accOnly = allAcc.filter(x => /[àèéíòóúÀÈÉÍÒÓÚ]/.test(x.solution) && !/[ïÏüÜ]/.test(x.solution));
+  const diaOnly = allAcc.filter(x => /[ïÏüÜ]/.test(x.solution));
+  const mixAll = allAcc.slice();
+  return {accOnly, diaOnly, mixAll};
+}
+function shuffled(a){const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]]}return r}
+function refillDeck(type){
+  const {accOnly, diaOnly, mixAll} = poolByType();
+  if(type==='accent') deckAccent = shuffled(accOnly);
+  else if(type==='diaeresi') deckDia = shuffled(diaOnly);
+  else deckMix = shuffled(mixAll);
+}
+
+// Decoy mixer: garanteix % exactes substituint posicions
+const DECOY_RATE = 0.20; // 20%
+function takeFromDeck(type, n){
+  let out=[];
+  if(type==='accent'){
+    if(deckAccent.length < n) refillDeck('accent');
+    out = deckAccent.splice(0, n);
+  } else if(type==='diaeresi'){
+    if(deckDia.length < n) refillDeck('diaeresi');
+    out = deckDia.splice(0, n);
+  } else {
+    if(deckMix.length < n) refillDeck('mix');
+    out = deckMix.splice(0, n);
+    // calcula quantitat exacta de distractors
+    let k = Math.max(1, Math.round(n * DECOY_RATE));
+    const poolNone = shuffled(NO_DIA_DOUBTS).map(sol=>({solution:sol, base:sol, needs:'none'}));
+    if(poolNone.length < k) k = poolNone.length;
+    const decoys = poolNone.slice(0, k);
+    // substitueix k posicions aleatòries per garantir la presència
+    const idxs = shuffled([...Array(out.length).keys()]).slice(0, k);
+    idxs.forEach((i, j)=>{ out[i] = decoys[j]; });
+  }
+  return shuffled(out); // baralla una mica
+}
+
+// ===== Estat i UI =====
+let mode='solo', series=[], idx=0, points=0, correct=0, streak=0, bestStreak=0, total=10, startTime=0;
+let sessionStartTimestamp = null;
+let attemptLog = [];
+let sentResult = false;
+let teamTurn='A';
+const teams={A:{name:'Equip A',score:0,corr:0,streak:0}, B:{name:'Equip B',score:0,corr:0,streak:0}};
+const cheers=['Fantàstic! 🎉','Molt bé! 💪','Brillant! ✨','Ho tens! 🙌','Així m’agrada! 👏','Excel·lent! 🏅','Genial! 😄','Imparable! ⚡','De llibre! 📘','Enorme! 🌟'];
+const teamColors={A:'#0284c7',B:'#059669'};
+
+const els={
+  word:document.getElementById('word'), done:document.getElementById('done'), total:document.getElementById('total'), points:document.getElementById('points'), correct:document.getElementById('correct'), streak:document.getElementById('streak'), start:document.getElementById('start'), noAccentBtn:document.getElementById('noAccentBtn'),
+  modeSel:document.getElementById('modeSel'), seriesLen:document.getElementById('seriesLen'), practiceType:document.getElementById('practiceType'),
+  hudSolo:document.getElementById('hudSolo'), hudTeams:document.getElementById('hudTeams'),
+  teamAName:document.getElementById('teamAName'), teamBName:document.getElementById('teamBName'), teamAScore:document.getElementById('teamAScore'), teamBScore:document.getElementById('teamBScore'), teamACorr:document.getElementById('teamACorr'), teamBCorr:document.getElementById('teamBCorr'), turnName:document.getElementById('turnName'),
+  toast:document.getElementById('toast'), turnBanner:document.getElementById('turnBanner'), mainCard:document.getElementById('mainCard'),
+  endModal:document.getElementById('endModal'), endPoints:document.getElementById('endPoints'), endCorrect:document.getElementById('endCorrect'), endBest:document.getElementById('endBest'), endStatsSolo:document.getElementById('endStatsSolo'), endStatsTeams:document.getElementById('endStatsTeams'), endTeamA:document.getElementById('endTeamA'), endTeamB:document.getElementById('endTeamB'), endAScore:document.getElementById('endAScore'), endBScore:document.getElementById('endBScore'), endACorr:document.getElementById('endACorr'), endBCorr:document.getElementById('endBCorr'),
+  btnRepeat:document.getElementById('btnRepeat'), btnNew:document.getElementById('btnNew'), btnMenu:document.getElementById('btnMenu'),
+  learnHint:document.getElementById('learnHint')
+};
+els.total && (els.total.textContent=total);
+
+function showToast(msg,color){els.toast.textContent=msg;els.toast.style.background=color||'#0ea5e9';els.toast.classList.remove('hidden');setTimeout(()=>els.toast.classList.add('hidden'),900)}
+function indicateTurn(){if(mode!=='teams')return;const c=teamColors[teamTurn]||'#0284c7';els.turnBanner.textContent=`Torn de: ${teams[teamTurn].name}`;els.turnBanner.style.background=c;els.turnBanner.classList.remove('hidden');setTimeout(()=>els.turnBanner.classList.add('hidden'),1200);els.mainCard.style.setProperty('--team-color',c);els.mainCard.style.borderColor=c;els.mainCard.classList.remove('turn-flash');void els.mainCard.offsetWidth;els.mainCard.classList.add('turn-flash')}
+
+function renderWord(item){const base=item.current||item.base;const frag=document.createDocumentFragment();[...base].forEach((ch,i)=>{const s=document.createElement('span');s.textContent=ch;s.className='char text-5xl md:text-7xl';s.dataset.i=i;if(isVowel(ch)){s.addEventListener('click',ev=>openPalette(ev.currentTarget,i,ch,item));}else{s.classList.add('cursor-default')}frag.appendChild(s)});els.word.innerHTML='';els.word.appendChild(frag)}
+
+// Paleta intel·ligent per mot (com a v3.6)
+function paletteOptionsFor(vowel, sol){
+  const t=els.practiceType.value; const v=vowel.toLowerCase();
+  const ACC={a:['a','à'],e:['e','é','è'],i:['i','í'],o:['o','ó','ò'],u:['u','ú']};
+  const DIA={i:['i','ï'],u:['u','ü']};
+  const both = hasAccent(sol) && hasDia(sol);
+  if(both){ const opts=new Set([...(ACC[v]||[vowel]), ...(DIA[v]||[])]); return [...opts]; }
+  if(t==='diaeresi') return (DIA[v]||[vowel]);
+  if(t==='accent')   return (ACC[v]||[vowel]);
+  return [...new Set([...(ACC[v]||[vowel]), ...(DIA[v]||[])])];
+}
+
+function openPalette(target,i,ch,item){closePalette();const r=target.getBoundingClientRect();const pop=document.createElement('div');pop.className='accent-pop';pop.id='accent-pop';const opts=paletteOptionsFor(ch, item.solution);pop.style.left=(r.left+window.scrollX-10)+'px';pop.style.top=(r.bottom+window.scrollY+8)+'px';const row=document.createElement('div');row.className='choices';opts.forEach(o=>{const b=document.createElement('button');b.textContent=o;b.addEventListener('click',()=>{applyAccent(i,o,item,target);closePalette();});row.appendChild(b)});pop.appendChild(row);const hint=document.createElement('div');hint.className='hint';hint.textContent='Clica per col·locar';pop.appendChild(hint);document.body.appendChild(pop)}
+function closePalette(){const ex=document.getElementById('accent-pop');if(ex)ex.remove()}
+
+function showCorrect(w, extra){els.learnHint.textContent = `Correcte: ${w}` + (extra? ` — ${extra}`:''); els.learnHint.classList.remove('hidden')}
+function hideCorrect(){els.learnHint.classList.add('hidden')}
+
+function positionsOf(pattern,s){const idxs=[];[...s].forEach((ch,i)=>{if(pattern.test(ch))idxs.push(i)});return idxs}
+
+function checkPartial(item){
+  const sol=item.solution, cur=item.current||item.base, t=els.practiceType.value; const both = hasAccent(sol) && hasDia(sol);
+  if(both) return cur===sol;
+  if(t==='diaeresi'){ return [...sol].every((ch,i)=> /[ïü]/.test(ch)? cur[i]===ch : true); }
+  if(t==='accent'){   return [...sol].every((ch,i)=> /[àèéíòóú]/.test(ch)? cur[i]===ch : true); }
+  return cur===sol;
+}
+
+function missingHint(item){
+  const sol=item.solution, cur=item.current||item.base;
+  const faltaAcc=[...sol].some((ch,i)=>/[àèéíòóú]/.test(ch)&&cur[i]!==ch);
+  const faltaDia=[...sol].some((ch,i)=>/[ïü]/.test(ch)&&cur[i]!==ch);
+  if(faltaAcc && faltaDia) return 'Et falta l’accent i la dièresi';
+  if(faltaAcc) return 'Et falta l’accent';
+  if(faltaDia) return 'Et falta la dièresi';
+  return '';
+}
+
+function applyAccent(pos,char,item){
+  const before=item.current||item.base; const arr=[...before]; arr[pos]=char; item.current=arr.join('');
+  renderWord(item);
+  const spans=els.word.querySelectorAll('.char'); const newSpan=spans[pos]; if(/[àáèéíïòóúü]/i.test(char)) newSpan.classList.add('accented');
+  const ok=checkPartial(item);
+  if(ok){ hideCorrect(); handleResult(true); }
+  else {
+    const t=els.practiceType.value; const sol=item.solution; const both=hasAccent(sol)&&hasDia(sol);
+    let wrong=false;
+    if(both){ wrong = sol[pos]!==char; }
+    else if(t==='diaeresi'){ wrong = (/[ïü]/.test(sol[pos]) && sol[pos]!==char) || (!/[ïü]/.test(sol[pos]) && /[ïü]/.test(char)); }
+    else if(t==='accent'){ wrong = (/[àèéíòóú]/.test(sol[pos]) && sol[pos]!==char) || (!/[àèéíòóú]/.test(sol[pos]) && /[àèéíòóú]/.test(char)); }
+    else { wrong = sol[pos]!==char; }
+    if(wrong){ item.lastAttempt = item.current; item.current=item.base; renderWord(item); showCorrect(item.solution, missingHint(item)); const main=els.mainCard; main.classList.add('shake'); setTimeout(()=>main.classList.remove('shake'),250); handleResult(false); }
+  }
+}
+
+function checkNoAccent(){
+  const item = series[idx];
+  const ok = item && item.needs==='none' && (item.current||item.base)===item.solution;
+  if(ok){ hideCorrect(); handleResult(true); }
+  else {  handleResult(false); }
+}
+
+function buildSeries(){const type=els.practiceType.value;const n=parseInt(els.seriesLen.value,10)||10;let arr=takeFromDeck(type, n); return arr.map(x=>({...x,current:x.base,lastAttempt:null}))}
+
+
+
+function sendResultToPortal() {
+  if (sentResult) return;
+  const totalDone = idx; // paraules resoltes dins la sèrie
+  const totalItems = series ? series.length : 0;
+  const totalAnswers = correct + (totalDone - correct); // aproximació; errades = totalDone - correct
+  const errades = Math.max(0, totalDone - correct);
+  if (totalDone <= 0) return;
+
+  const tempsSegons = sessionStartTimestamp ? Math.round((Date.now() - sessionStartTimestamp) / 1000) : null;
+
+  const errors = attemptLog
+    .filter(x => !x.correcta)
+    .map(x => ({
+      pregunta: x.numero,
+      paraulaBase: x.base,
+      respostaUsuari: x.respostaUsuari,
+      respostaCorrecta: x.respostaCorrecta,
+      tipus: x.tipus
+    }));
+
+  window.parent.postMessage({
+    type: 'ACT_RESULT',
+    activityId: 'A9',
+    payload: {
+      total: totalDone,
+      encerts: correct,
+      errades,
+      tempsSegons,
+      mode: els.practiceType ? els.practiceType.value : 'mix',
+      uiMode: els.modeSel ? els.modeSel.value : 'solo',
+      seriesLen: totalItems,
+      points,
+      bestStreak,
+      errors
+    }
+  }, '*');
+
+  sentResult = true;
+}
+function start(){mode=els.modeSel.value;
+ sessionStartTimestamp = Date.now();
+ attemptLog = [];
+ sentResult = false; total=parseInt(els.seriesLen.value,10)||10; bestStreak=0; idx=0; points=0; correct=0; streak=0; els.points&&(els.points.textContent=0); els.correct&&(els.correct.textContent=0); els.streak&&(els.streak.textContent=0); els.done&&(els.done.textContent=0); els.total&&(els.total.textContent=total); teams.A.name=(document.getElementById('teamAName')||{}).value||'Equip A'; teams.B.name=(document.getElementById('teamBName')||{}).value||'Equip B'; teams.A.score=teams.B.score=0; teams.A.corr=teams.B.corr=0; teams.A.streak=teams.B.streak=0; teamTurn='A'; const aS=document.getElementById('teamAScore'),bS=document.getElementById('teamBScore'),aC=document.getElementById('teamACorr'),bC=document.getElementById('teamBCorr'); aS&&(aS.textContent=0); bS&&(bS.textContent=0); aC&&(aC.textContent=0); bC&&(bC.textContent=0); els.turnName&&(els.turnName.textContent=teams[teamTurn].name); if(mode==='teams'){ els.hudSolo.classList.add('hidden'); els.hudTeams.classList.remove('hidden'); indicateTurn(); } else { els.hudTeams.classList.add('hidden'); els.hudSolo.classList.remove('hidden'); els.mainCard.style.borderColor = '#e5e7eb'; }
+  series = buildSeries(); hideCorrect(); show(); }
+
+function show(){ const item=series[idx]; renderWord(item); startTime = Date.now(); }
+function speedBonus(ms){ const s=ms/1000; if(s<3) return 5; if(s<6) return 3; if(s<10) return 1; return 0; }
+function handleResult(ok){
+  // 🔎 Log per veure l'evolució (paraula, resposta, tipus)
+  try {
+    const item = series[idx];
+    if (item) {
+      const userAns = ok ? (item.current || item.base) : (item.lastAttempt || item.current || item.base);
+      attemptLog.push({
+        numero: idx + 1,
+        base: item.base,
+        respostaUsuari: userAns,
+        respostaCorrecta: item.solution,
+        tipus: els.practiceType ? els.practiceType.value : 'mix',
+        correcta: !!ok
+      });
+      item.lastAttempt = null;
+    }
+  } catch(e) {}
+ const elapsed = Date.now()-startTime; const bonus = ok? speedBonus(elapsed):0; if(mode==='solo'){ if(ok){ correct++; streak++; if(streak>bestStreak) bestStreak=streak; points += (streak>=5?20:10) + bonus; els.correct&&(els.correct.textContent=correct); els.streak&&(els.streak.textContent=streak); els.points&&(els.points.textContent=points); showToast(cheers[Math.floor(Math.random()*cheers.length)], '#10b981'); } else { streak=0; els.streak&&(els.streak.textContent=0); showToast('Apunta-ho: fixa’t en la forma correcta 👀', '#f97316'); } } else { const T = teams[teamTurn]; if(ok){ T.corr++; T.streak++; if(T.streak>bestStreak) bestStreak=T.streak; T.score += (T.streak>=5?20:10) + bonus; (document.getElementById('teamACorr')||{}).textContent=teams.A.corr; (document.getElementById('teamBCorr')||{}).textContent=teams.B.corr; (document.getElementById('teamAScore')||{}).textContent=teams.A.score; (document.getElementById('teamBScore')||{}).textContent=teams.B.score; showToast(`${cheers[Math.floor(Math.random()*cheers.length)]} (${T.name})`, teamTurn==='A'? '#0284c7':'#059669'); } else { T.streak=0; showToast(`Bona! Ara ja saps la forma correcta ✍️`, '#f59e0b'); } } setTimeout(()=>{ idx++; els.done&&(els.done.textContent=idx); if(idx>=series.length){ finish(); } else { if(mode==='teams'){ teamTurn = (teamTurn==='A') ? 'B' : 'A'; els.turnName&&(els.turnName.textContent=teams[teamTurn].name); indicateTurn(); } show(); } }, 700); }
+
+function openEndModal(){ els.endModal.classList.remove('hidden'); }
+function closeEndModal(){ els.endModal.classList.add('hidden'); }
+function finish(){
+  sendResultToPortal(); closePalette(); if(mode==='solo'){ els.endStatsSolo.classList.remove('hidden'); els.endStatsTeams.classList.add('hidden'); els.endPoints.textContent = points; els.endCorrect.textContent = correct; els.endBest.textContent = bestStreak; } else { els.endStatsSolo.classList.add('hidden'); els.endStatsTeams.classList.remove('hidden'); els.endTeamA.textContent = teams.A.name; els.endTeamB.textContent = teams.B.name; els.endAScore.textContent = teams.A.score; els.endBScore.textContent = teams.B.score; els.endACorr.textContent = teams.A.corr; els.endBCorr.textContent = teams.B.corr; } openEndModal(); }
+
+window.addEventListener('click',(e)=>{ const pop=document.getElementById('accent-pop'); if(pop && !pop.contains(e.target) && !e.target.classList.contains('char')) closePalette(); });
+
+document.getElementById('start').addEventListener('click', start);
+document.getElementById('modeSel').addEventListener('change', ()=>{ if(els.modeSel.value==='teams'){ els.hudSolo.classList.add('hidden'); els.hudTeams.classList.remove('hidden'); indicateTurn(); } else { els.hudTeams.classList.add('hidden'); els.hudSolo.classList.remove('hidden'); els.mainCard.style.borderColor = '#e5e7eb'; }});
+els.noAccentBtn.addEventListener('click', checkNoAccent);
+
+// Botó per acabar abans (enviar resultat i deixar que el wrapper torni a unitats)
+els.finishSendBtn = document.getElementById('finishSendBtn');
+if (els.finishSendBtn){
+  els.finishSendBtn.addEventListener('click', () => {
+    sendResultToPortal();
+    showToast('✅ Resultat enviat al portal', '#10b981');
+    // Evita dobles enviaments
+    els.finishSendBtn.disabled = true;
+  });
+}
+
+document.getElementById('btnRepeat').addEventListener('click', ()=>{ closeEndModal(); idx=0; points=0; correct=0; streak=0; bestStreak=0; els.points&&(els.points.textContent=0); els.correct&&(els.correct.textContent=0); els.streak&&(els.streak.textContent=0); els.done&&(els.done.textContent=0); series = buildSeries(); hideCorrect(); show(); });
+document.getElementById('btnNew').addEventListener('click', ()=>{ closeEndModal(); start(); });
+document.getElementById('btnMenu').addEventListener('click', () => {
+  sendResultToPortal(); closeEndModal(); els.word.textContent='—'; els.points&&(els.points.textContent=0); els.correct&&(els.correct.textContent=0); els.streak&&(els.streak.textContent=0); els.done&&(els.done.textContent=0); els.mainCard.style.borderColor = '#e5e7eb'; els.hudSolo.classList.remove('hidden'); els.hudTeams.classList.add('hidden'); hideCorrect(); });
+</script>
+
+<script>
+// === TIPS DE DIÈRESI (opció A: cada 6 encerts; targeteta centrada que espera clic) ===
+const _tips = [
+  'La dièresi fa PRONUNCIAR la U en qüe/qüi/güe/güi (ex.: qüestió, pingüí, llengües).',
+  'La dièresi marca HIAT amb ï/ü (ex.: raïm, veïna, aïllar, diürn).',
+  'NO posem dièresi en infinitiu, gerundi, futur i condicional dels verbs en vocal + -ir (ex.: traduir, traduint, construiré, produiria).',
+  'NO posem dièresi amb prefixos (anti-, auto-, co-, re-, contra-, pre-) ni en -isme/-ista (ex.: antiinflamatori, coincidència, heroisme).'
+];
+let _tipIdx = 0; let _okSinceTip = 0; const _tipEvery = 6;
+let _tipOpen = false;
+function _showTip(){
+  const card = document.getElementById('tipCard');
+  const txt = document.getElementById('tipText');
+  const bd  = document.getElementById('tipBackdrop');
+  if(!card||!txt||!bd) return;
+  txt.textContent = _tips[_tipIdx % _tips.length]; _tipIdx++;
+  _tipOpen = true;
+  bd.classList.remove('tip-hide');
+  card.classList.remove('tip-hide');
+  const dismiss = ()=>{ card.classList.add('tip-hide'); bd.classList.add('tip-hide'); _tipOpen=false; bd.removeEventListener('click', dismiss); card.removeEventListener('click', dismiss); };
+  // Demana un clic per continuar (a la targeta o a fora)
+  bd.addEventListener('click', dismiss);
+  card.addEventListener('click', dismiss);
+}
+// Hook a handleResult per comptar encerts i mostrar el TIP
+(function(){
+  const _orig = window.handleResult;
+  window.handleResult = function(ok){
+    _orig.apply(this, arguments);
+    try{
+      if(ok && !_tipOpen){
+        _okSinceTip++;
+        if(_okSinceTip % _tipEvery === 0){ _showTip(); }
+      }
+    }catch(e){}
+  }
+})();
+</script>
+
+</body>
+</html>

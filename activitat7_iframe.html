@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="ca" class="h-full">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Entrena les Grafies – B · V · MB · MV · NV · MM · NM (v1.7)</title>
+ <script src="https://cdn.tailwindcss.com"></script>
+ <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+ <style>
+ * { font-family: 'Poppins', sans-serif; }
+ .grafia-button { transition: all 0.2s ease; position: relative; }
+ .grafia-button:hover { transform: translateY(-2px); }
+ .grafia-button:active { transform: scale(0.95); }
+ @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px);} to { opacity: 1; transform: translateY(0);} }
+ </style>
+</head>
+<body class="h-full bg-gradient-to-br from-lime-50 via-emerald-50 to-cyan-50 overflow-auto">
+<div id="app-container" class="w-full min-h-full p-4 md:p-6">
+ <div id="main-menu" class="max-w-4xl mx-auto">
+  <div class="text-center mb-6">
+   <h1 id="main-title" class="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 mb-3">🔤 B · V · MB · MV · NV · MM · NM</h1>
+   <p id="instruction-text" class="text-slate-700 text-base md:text-lg font-semibold">Tria la grafia que completa correctament la paraula: B, V, MB, MV, NV, MM o NM</p>
+   <div class="mt-2 flex flex-col items-center gap-1">
+    <div class="flex items-center gap-2">
+      <input type="checkbox" id="toggle-hints" class="h-5 w-5 rounded border-2 border-slate-300 text-emerald-600 focus:ring-0">
+      <label for="toggle-hints" class="text-slate-700 text-sm font-semibold">Mostra pistes (singular/base)</label>
+    </div>
+    <p class="text-xs text-slate-500">ℹ️ Les paraules amb risc de confusió mostren sempre una pista (encara que desactivis el botó de pistes).</p>
+   </div>
+  </div>
+  <div class="grid md:grid-cols-2 gap-6 mb-8">
+   <div class="bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-3xl p-8 shadow-2xl border-4 border-emerald-300 cursor-pointer" id="practice-mode-btn">
+    <div class="text-center text-white">
+     <div class="text-6xl mb-4">📚</div>
+     <h2 class="text-3xl font-black mb-3">Mode Pràctica</h2>
+     <p class="text-emerald-100 font-semibold mb-4">Sèries de 10 paraules</p>
+     <ul class="text-left text-emerald-100 text-sm space-y-2 mb-6">
+      <li>✓ Sense límit de temps</li>
+      <li>✓ Continua quan vulguis</li>
+      <li>✓ Perfecte per aprendre</li>
+     </ul>
+     <div class="bg-white text-emerald-600 font-black py-3 px-6 rounded-full">Començar</div>
+    </div>
+   </div>
+   <div class="bg-gradient-to-br from-cyan-400 to-sky-500 rounded-3xl p-8 shadow-2xl border-4 border-cyan-300 cursor-pointer" id="competition-mode-btn">
+    <div class="text-center text-white">
+     <div class="text-6xl mb-4">⏱️</div>
+     <h2 class="text-3xl font-black mb-3">Mode Competició</h2>
+     <p class="text-cyan-100 font-semibold mb-4">2 minuts de repte (sense rànquing)</p>
+     <ul class="text-left text-cyan-100 text-sm space-y-2 mb-6">
+      <li>✓ Contra el cronòmetre</li>
+      <li>✓ Punts, encerts i ratxa</li>
+      <li>✓ Sense rànquing</li>
+     </ul>
+     <div class="bg-white text-cyan-600 font-black py-3 px-6 rounded-full">Competir</div>
+    </div>
+   </div>
+  </div>
+ </div>
+ <div id="game-screen" class="hidden">
+  <div class="flex justify-between items-center mb-4">
+   <button id="back-to-menu-btn" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-full shadow-lg"> ← Menú </button>
+   <div id="mode-indicator" class="text-lg font-black text-slate-700"></div>
+   <div class="w-20"></div>
+  </div>
+  <div id="timer-container" class="hidden text-center mb-4">
+   <div class="bg-gradient-to-br from-rose-500 to-orange-500 text-white rounded-2xl px-8 py-4 inline-block shadow-lg">
+    <div class="text-sm font-bold uppercase tracking-wider">Temps Restant</div>
+    <div class="text-4xl font-black"><span id="timer">2:00</span></div>
+   </div>
+  </div>
+  <div class="flex flex-wrap justify-center gap-3 mb-6 max-w-4xl mx-auto">
+   <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl px-6 py-3 shadow-lg">
+    <div class="text-white/80 text-xs font-bold uppercase tracking-wider">Punts</div>
+    <div class="text-white text-2xl font-black"><span id="points">0</span> pts</div>
+   </div>
+   <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl px-6 py-3 shadow-lg">
+    <div class="text-white/80 text-xs font-bold uppercase tracking-wider">Encerts</div>
+    <div class="text-white text-2xl font-black"><span id="correct-count">0</span></div>
+   </div>
+   <div class="bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl px-6 py-3 shadow-lg">
+    <div class="text-white/80 text-xs font-bold uppercase tracking-wider">Ratxa</div>
+    <div class="text-white text-2xl font-black">🔥 <span id="streak">0</span></div>
+   </div>
+   <div id="round-display" class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl px-6 py-3 shadow-lg">
+    <div class="text-white/80 text-xs font-bold uppercase tracking-wider">Paraules</div>
+    <div class="text-white text-2xl font-black"><span id="words-completed">0</span>/10</div>
+   </div>
+  </div>
+  <div class="max-w-3xl mx-auto mb-4">
+   <div class="bg-slate-200 rounded-full h-3 overflow-hidden shadow-inner">
+    <div id="progress-bar" class="bg-gradient-to-r from-emerald-500 via-fuchsia-500 to-orange-500 h-full transition-all duration-500 ease-out" style="width: 0%"></div>
+   </div>
+  </div>
+  <div class="flex flex-wrap justify-center gap-3 mb-6 max-w-3xl mx-auto">
+   <button class="grafia-button bg-gradient-to-br from-lime-400 to-lime-500 hover:from-lime-500 hover:to-lime-600 text-white rounded-2xl px-8 py-4 shadow-lg border-4 border-lime-300" data-grafia="b"><span class="text-4xl font-black">B</span></button>
+   <button class="grafia-button bg-gradient-to-br from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white rounded-2xl px-8 py-4 shadow-lg border-4 border-amber-300" data-grafia="v"><span class="text-4xl font-black">V</span></button>
+   <button class="grafia-button bg-gradient-to-br from-sky-400 to-sky-500 hover:from-sky-500 hover:to-sky-600 text-white rounded-2xl px-8 py-4 shadow-lg border-4 border-sky-300" data-grafia="mb"><span class="text-4xl font-black">MB</span></button>
+   <button class="grafia-button bg-gradient-to-br from-teal-400 to-teal-500 hover:from-teal-500 hover:to-teal-600 text-white rounded-2xl px-8 py-4 shadow-lg border-4 border-teal-300" data-grafia="mv"><span class="text-4xl font-black">MV</span></button>
+   <button class="grafia-button bg-gradient-to-br from-emerald-400 to-emerald-500 hover:from-emerald-500 hover:to-emerald-600 text-white rounded-2xl px-8 py-4 shadow-lg border-4 border-emerald-300" data-grafia="nv"><span class="text-4xl font-black">NV</span></button>
+   <button class="grafia-button bg-gradient-to-br from-violet-400 to-violet-500 hover:from-violet-500 hover:to-violet-600 text-white rounded-2xl px-8 py-4 shadow-lg border-4 border-violet-300" data-grafia="mm"><span class="text-4xl font-black">MM</span></button>
+   <button class="grafia-button bg-gradient-to-br from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white rounded-2xl px-8 py-4 shadow-lg border-4 border-orange-300" data-grafia="nm"><span class="text-4xl font-black">NM</span></button>
+  </div>
+  <div class="max-w-2xl mx-auto mb-6">
+   <div class="bg-gradient-to-br from-white to-slate-50 rounded-3xl p-8 shadow-2xl border-4 border-slate-200">
+    <div class="text-center">
+     <div class="text-slate-500 text-sm font-bold uppercase tracking-wider mb-3">Quina és la grafia correcta?</div>
+     <div id="current-word" class="text-5xl md:text-7xl font-black text-slate-800 mb-2 tracking-tight"></div>
+     <div id="word-hint" class="text-slate-400 text-sm font-semibold italic mb-1"></div>
+     <div id="correct-spell" class="text-slate-600 text-base font-bold hidden"> </div>
+    </div>
+   </div>
+  </div>
+  <div id="feedback-message" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 hidden">
+   <div id="feedback-content" class="bg-white rounded-3xl px-8 py-6 shadow-2xl border-4 text-center">
+    <div id="feedback-icon" class="text-6xl mb-2"></div>
+    <div id="feedback-text" class="text-2xl font-black"></div>
+    <div id="feedback-points" class="text-lg font-bold mt-1"></div>
+   </div>
+  </div>
+ </div>
+ <div id="series-completion" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+  <div class="bg-gradient-to-br from-emerald-50 to-cyan-50 rounded-3xl p-10 text-center shadow-2xl max-w-lg mx-4 border-4 border-emerald-200">
+   <div class="text-7xl mb-4">🎉</div>
+   <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-cyan-600 mb-3">Sèrie Completada!</h2>
+   <div class="bg-white rounded-2xl p-6 mb-6 shadow-lg">
+    <div class="grid grid-cols-2 gap-4">
+     <div>
+      <div class="text-3xl font-black text-emerald-600"><span id="series-points">0</span></div>
+      <div class="text-xs text-slate-600 font-bold uppercase">Punts</div>
+     </div>
+     <div>
+      <div class="text-3xl font-black text-emerald-600"><span id="series-correct">0</span>/10</div>
+      <div class="text-xs text-slate-600 font-bold uppercase">Encerts</div>
+     </div>
+    </div>
+   </div>
+   <div class="flex gap-3 justify-center">
+    <button id="continue-btn" class="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transform hover:scale-105 transition-all"> ➜ Continuar (10 més) </button>
+    <button id="finish-practice-btn" class="bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transform hover:scale-105 transition-all"> ✓ Acabar </button>
+   </div>
+  </div>
+ </div>
+ <div id="competition-end" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+  <div class="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-3xl p-10 text-center shadow-2xl max-w-lg mx-4 border-4 border-cyan-200">
+   <div class="text-7xl mb-4">🏁</div>
+   <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-blue-600 mb-3">Temps Acabat!</h2>
+   <div class="bg-white rounded-2xl p-6 mb-6 shadow-lg">
+    <div class="grid grid-cols-2 gap-4">
+     <div>
+      <div class="text-3xl font-black text-purple-600"><span id="comp-points">0</span></div>
+      <div class="text-xs text-slate-600 font-bold uppercase">Punts Totals</div>
+     </div>
+     <div>
+      <div class="text-3xl font-black text-emerald-600"><span id="comp-correct">0</span></div>
+      <div class="text-xs text-slate-600 font-bold uppercase">Encerts</div>
+     </div>
+     <div>
+      <div class="text-3xl font-black text-pink-600"><span id="comp-streak">0</span></div>
+      <div class="text-xs text-slate-600 font-bold uppercase">Millor Ratxa</div>
+     </div>
+     <div>
+      <div class="text-3xl font-black text-orange-600"><span id="comp-accuracy">0</span>%</div>
+      <div class="text-xs text-slate-600 font-bold uppercase">Precisió</div>
+     </div>
+    </div>
+   </div>
+   <button id="back-from-comp-btn" class="mt-2 text-slate-600 hover:text-slate-800 font-bold underline"> Tornar al menú </button>
+  </div>
+ </div>
+</div>
+<script>
+// ====== Paraules (partirem de la teva llista base i aplicarem canvis sol·licitats) ======
+let wordsData = [
+  { word: 'abans', grafia: 'b' },
+  { word: 'acabar', grafia: 'b' },
+  { word: 'alabès', grafia: 'b' },
+  { word: 'arribar', grafia: 'b' },
+  { word: 'baca', grafia: 'b', hint: '(portaequipatges del cotxe)' },
+  { word: 'baixar', grafia: 'b' },
+  { word: 'balda', grafia: 'b' },
+  { word: 'barana', grafia: 'b' },
+  { word: 'basc', grafia: 'b' },
+  { word: 'batre', grafia: 'b' },
+  { word: 'bena', grafia: 'b', hint: '(peça de teixit)' },
+  { word: 'berruga', grafia: 'b' },
+  { word: 'beure', grafia: 'b', hint: '(ingerir líquid)' },
+  { word: 'biga', grafia: 'b' },
+  { word: 'Biscaia', grafia: 'b' },
+  { word: 'boca', grafia: 'b' },
+  { word: 'boira', grafia: 'b' },
+  { word: 'bolcar', grafia: 'b' },
+  { word: 'bonic', grafia: 'b' },
+  { word: 'botar', grafia: 'b', hint: '(saltar)' },
+  { word: 'botiga', grafia: 'b' },
+  { word: 'brossa', grafia: 'b' },
+  { word: 'buidar', grafia: 'b' },
+  { word: 'buit', grafia: 'b', hint: '(espai sense res)' },
+  { word: 'calb', grafia: 'b' },
+  { word: 'comboi', grafia: 'b' },
+  { word: 'corba', grafia: 'b' },
+  { word: 'embenar', grafia: 'b' },
+  { word: 'mòbil', grafia: 'b' },
+  { word: 'rebentar', grafia: 'b', hint: '(trencar o esclatar amb violència; amb B)' },
+  { word: 'rebolcar', grafia: 'b', hint: '(fer rodolar o arrossegar per terra; amb B)' },
+  { word: 'ribera', grafia: 'b' },
+  { word: 'sabó', grafia: 'b' },
+  { word: 'treballar', grafia: 'b' },
+
+  { word: 'ambaixada', grafia: 'mb' },
+  { word: 'ambició', grafia: 'mb' },
+  { word: 'bombeta', grafia: 'mb' },
+  { word: 'combatre', grafia: 'mb' },
+  { word: 'embenar', grafia: 'mb', hint: '(em- + b)' },
+  { word: 'embellir', grafia: 'mb', hint: '(em- + b)', force_hint: true },
+  { word: 'embolcall', grafia: 'mb', hint: '(em- + b)' },
+  { word: 'embolic', grafia: 'mb', hint: '(em- + b)' },
+  { word: 'embut', grafia: 'mb', hint: '(em- + b)' },
+  { word: 'ombra', grafia: 'mb' },
+  { word: 'també', grafia: 'mb' },
+  { word: 'tombar', grafia: 'mb' },
+
+  { word: 'circumval·lació', grafia: 'mv', hint: '(circum- + val·lació)' },
+  { word: 'tramvia', grafia: 'mv' },
+
+  { word: 'emmagatzemar', grafia: 'mm', hint: '(em- + m)' },
+  { word: 'emmarcar', grafia: 'mm', hint: '(em- + m)' },
+  { word: 'emmirallar', grafia: 'mm', hint: '(em- + m)' },
+  { word: 'emmotllar', grafia: 'mm', hint: '(em- + m)' },
+  { word: 'emmudir', grafia: 'mm', hint: '(em- + m)' },
+  { word: 'immaculat', grafia: 'mm', hint: '(in- + m)' },
+  { word: 'immediat', grafia: 'mm', hint: '(in- + m)' },
+  { word: 'immens', grafia: 'mm', hint: '(in- + m)' },
+  { word: 'immersió', grafia: 'mm', hint: '(acció de submergir-se)' },
+  { word: 'immoble', grafia: 'mm', hint: '(in- + m)' },
+  { word: 'immortal', grafia: 'mm', hint: '(in- + m)' },
+  { word: 'immunitat', grafia: 'mm', hint: '(in- + m)' },
+  { word: 'immòbil', grafia: 'mm', hint: '(in- + m)' },
+
+  { word: 'enmig', grafia: 'nm', hint: '(en- + mig)' },
+  { word: 'granment', grafia: 'nm' },
+  { word: 'tanmateix', grafia: 'nm' },
+
+  { word: 'envair', grafia: 'nv', hint: '(en- + v)' },
+  { word: 'enveja', grafia: 'nv', hint: '(en- + v)' },
+  { word: 'envellir', grafia: 'nv', hint: '(en- + v)' },
+  { word: 'enviar', grafia: 'nv', hint: '(en- + v)' },
+  { word: 'envoltar', grafia: 'nv', hint: '(en- + v)' },
+  { word: 'envàs', grafia: 'nv', hint: '(en- + v)' },
+  { word: 'invadir', grafia: 'nv', hint: '(in- + v)' },
+  { word: 'invenció', grafia: 'nv', hint: '(in- + v)' },
+  { word: 'inventar', grafia: 'nv', hint: '(in- + v)' },
+  { word: 'inversemblant', grafia: 'nv', hint: '(in- + v)' },
+  { word: 'invisible', grafia: 'nv', hint: '(in- + v)' },
+  { word: 'invocar', grafia: 'nv', hint: '(in- + v)' },
+  { word: 'invàlid', grafia: 'nv', hint: '(in- + v)' },
+
+  { word: 'advocat', grafia: 'v' },
+  { word: 'avall', grafia: 'v' },
+  { word: 'avet', grafia: 'v' },
+  { word: 'avi', grafia: 'v' },
+  { word: 'avorrir', grafia: 'v' },
+  { word: 'avortar', grafia: 'v' },
+  { word: 'bava', grafia: 'v' },
+  { word: 'cascavell', grafia: 'v' },
+  { word: 'cavall', grafia: 'v' },
+  { word: 'covard', grafia: 'v' },
+  { word: 'espavilar', grafia: 'v' },
+  { word: 'Esteve', grafia: 'v' },
+  { word: 'gavardina', grafia: 'v' },
+  { word: 'govern', grafia: 'v' },
+  { word: 'gravar', grafia: 'v' },
+  { word: 'haver', grafia: 'v' },
+  { word: 'inversió', grafia: 'v', hint: '(operació de capital / financer)', force_hint: true },
+  { word: 'llavi', grafia: 'v' },
+  { word: 'núvol', grafia: 'v' },
+  { word: 'pavelló', grafia: 'v' },
+  { word: 'provar', grafia: 'v' },
+  { word: 'raval', grafia: 'v' },
+  { word: 'rave', grafia: 'v' },
+  { word: 'rovell', grafia: 'v' },
+  { word: 'savi', grafia: 'v' },
+  { word: 'sivella', grafia: 'v' },
+  { word: 'taverna', grafia: 'v' },
+  { word: 'travar', grafia: 'v' },
+  { word: 'tàvec', grafia: 'v' },
+  { word: 'vaca', grafia: 'v', hint: '(animal)' },
+  { word: 'vaixell', grafia: 'v' },
+  { word: 'vapor', grafia: 'v' },
+  { word: 'vela', grafia: 'v' },
+  { word: 'vena', grafia: 'v', hint: '(vas sanguini)' },
+  { word: 'vendre', grafia: 'v' },
+  { word: 'vernís', grafia: 'v' },
+  { word: 'veure', grafia: 'v', hint: '(percebre amb la vista)' },
+  { word: 'vint', grafia: 'v' },
+  { word: 'viure', grafia: 'v' },
+  { word: 'volar', grafia: 'v' },
+  { word: 'vora', grafia: 'v' },
+  { word: 'vorera', grafia: 'v' },
+  { word: 'votar', grafia: 'v', hint: '(eleccions)' },
+  { word: 'vuit', grafia: 'v', hint: '(número)' }
+];
+
+// ====== Postprocess: eliminar 'envolcall', forçar ajudes i parells B/V ======
+wordsData = wordsData.filter(w => w.word !== 'envolcall'); // treu 'envolcall'
+
+// Força pistes per a EM-, EN-/IN-, IMM-/INV- i parells B/V
+function forceHintIf(predicate, defaultHint){
+  wordsData.forEach(w=>{ if (predicate(w)) { w.force_hint = true; if(!w.hint && defaultHint) w.hint = defaultHint(w); } });
+}
+forceHintIf(w => w.word.startsWith('em') && (w.grafia==='mb' || w.grafia==='mm'), w=> w.grafia==='mm'?'(em- + m)':'(em- + b)');
+forceHintIf(w => w.word.startsWith('en') && w.grafia==='nv', ()=>'(en- + v)');
+forceHintIf(w => w.word.startsWith('imm') && w.grafia==='mm', ()=>'(in- + m)');
+forceHintIf(w => w.word.startsWith('inv') && w.grafia==='nv', ()=>'(in- + v)');
+
+// Parells b/v inicials (baca/vaca, etc.)
+const byWord = new Map(wordsData.map(w=>[w.word, w]));
+for (const w of wordsData){
+  if (!w.word) continue;
+  if (w.word[0].toLowerCase()==='b'){
+    const vCand = 'v' + w.word.slice(1);
+    if (byWord.has(vCand)){
+      w.force_hint = true; if (!w.hint) w.hint='(amb B)';
+      const v = byWord.get(vCand); v.force_hint = true; if (!v.hint) v.hint='(amb V)';
+    }
+  }
+}
+
+// ====== Estat del joc ======
+let currentMode = null;
+let points = 0, correctCount = 0, errorCount = 0;
+let streak = 0, bestStreak = 0;
+let currentWordIndex = 0, currentSeriesWords = 0;
+let shuffledWords = [], currentWord = null;
+const wordsPerSeries = 10;
+
+// Pistes (toggle general) + force_hint per paraules dubtoses
+let showHints = JSON.parse(localStorage.getItem('show_hints_bvmbmvnvmmnm') ?? 'false');
+window.addEventListener('DOMContentLoaded', () => {
+  const t = document.getElementById('toggle-hints');
+  if (t) {
+    t.checked = showHints; t.addEventListener('change', e => {
+      showHints = !!e.target.checked; localStorage.setItem('show_hints_bvmbmvnvmmnm', JSON.stringify(showHints));
+    });
+  }
+});
+window.addEventListener('keydown', ev => {
+  if (ev.key.toLowerCase() === 'h' && currentMode === 'practice') {
+    showHints = !showHints;
+    localStorage.setItem('show_hints_bvmbmvnvmmnm', JSON.stringify(showHints));
+    const t = document.getElementById('toggle-hints'); if (t) t.checked = showHints;
+  }
+});
+
+let timerInterval = null, timeRemaining = 120, isGameActive = false;
+function shuffleArray(a){ const s=[...a]; for(let i=s.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [s[i],s[j]]=[s[j],s[i]];} return s; }
+function showScreen(id){ ['main-menu','game-screen','series-completion','competition-end'].forEach(x=>document.getElementById(x).classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
+function startPracticeMode(){ currentMode='practice'; resetGameState();
+ startTimestamp = Date.now();
+ attemptLog = [];
+ sentResult = false; shuffledWords = shuffleArray([...wordsData]); document.getElementById('mode-indicator').textContent='📚 Mode Pràctica'; document.getElementById('timer-container').classList.add('hidden'); document.getElementById('round-display').classList.remove('hidden'); showScreen('game-screen'); showNextWord(); }
+function startCompetitionMode(){ currentMode='competition'; resetGameState();
+ startTimestamp = Date.now();
+ attemptLog = [];
+ sentResult = false; shuffledWords = shuffleArray([...wordsData]); timeRemaining=120; isGameActive=true; document.getElementById('mode-indicator').textContent='⏱️ Mode Competició'; document.getElementById('timer-container').classList.remove('hidden'); document.getElementById('round-display').classList.remove('hidden'); showScreen('game-screen'); startTimer(); showNextWord(); }
+function startTimer(){ updateTimerDisplay(); timerInterval=setInterval(()=>{ if(!isGameActive){clearInterval(timerInterval);return;} timeRemaining--; updateTimerDisplay(); if(timeRemaining<=0){ endCompetition(); } },1000); }
+function updateTimerDisplay(){ const m=Math.floor(timeRemaining / 60), s=timeRemaining % 60; document.getElementById('timer').textContent=`${m}:${s.toString().padStart(2,'0')}`; }
+function endCompetition(){ isGameActive=false; clearInterval(timerInterval); const total=correctCount+errorCount, acc= total>0? Math.round((correctCount / total) * 100):0; document.getElementById('comp-points').textContent = points; document.getElementById('comp-correct').textContent = correctCount; document.getElementById('comp-streak').textContent = bestStreak; document.getElementById('comp-accuracy').textContent = acc; document.getElementById('competition-end').classList.remove('hidden'); }
+function resetGameState(){ points=0; correctCount=0; errorCount=0; streak=0; bestStreak=0; currentWordIndex=0; currentSeriesWords=0; document.getElementById('points').textContent='0'; document.getElementById('correct-count').textContent='0'; document.getElementById('streak').textContent='0'; document.getElementById('words-completed').textContent='0'; document.getElementById('progress-bar').style.width='0%'; }
+
+function showNextWord(){
+  if (currentMode==='practice' && currentSeriesWords>=wordsPerSeries){ showSeriesCompletion(); return; }
+  if (currentWordIndex>=shuffledWords.length){ shuffledWords = shuffleArray([...wordsData]); currentWordIndex=0; }
+  currentWord = shuffledWords[currentWordIndex];
+  const wordDisplay = document.getElementById('current-word');
+  let displayWord = currentWord.word;
+  let regex;
+  switch (currentWord.grafia){
+    case 'b': { const m = displayWord.match(/b/i); if (m) displayWord = displayWord.replace(m[0], '_'); break; }
+    case 'v': { const m = displayWord.match(/v/i); if (m) displayWord = displayWord.replace(m[0], '_'); break; }
+    case 'mb': regex = /mb/i; break;
+    case 'mv': regex = /mv/i; break;
+    case 'nv': regex = /nv/i; break;
+    case 'mm': regex = /mm/i; break;
+    case 'nm': regex = /nm/i; break;
+  }
+  if (regex) displayWord = displayWord.replace(regex, '_');
+
+  // Mostrar pista: sempre si force_hint; si no, segons toggle en pràctica
+  const hintEl = document.getElementById('word-hint');
+  if (currentWord.hint && (currentWord.force_hint || (showHints && currentMode==='practice'))){
+    hintEl.textContent = currentWord.hint;
+    hintEl.classList.remove('hidden');
+  } else { hintEl.textContent = ''; hintEl.classList.add('hidden'); }
+
+  // Neteja el reforç de paraula correcta
+  const cs = document.getElementById('correct-spell'); cs.textContent=''; cs.classList.add('hidden');
+
+  wordDisplay.textContent = displayWord; wordDisplay.style.animation='none'; setTimeout(()=>{ wordDisplay.style.animation='fadeIn 0.5s ease'; },10);
+  if (currentMode==='practice'){ document.getElementById('words-completed').textContent=currentSeriesWords; document.getElementById('progress-bar').style.width=(currentSeriesWords/wordsPerSeries*100)+'%'; }
+  else { document.getElementById('words-completed').textContent=correctCount; document.getElementById('progress-bar').style.width='100%'; }
+}
+
+function setupGrafiaButtons(){ document.querySelectorAll('.grafia-button').forEach(btn=>{ btn.addEventListener('click',()=>{ if(!currentWord || !isGameActive) return; handleAnswer(btn.dataset.grafia); }); }); }
+
+function handleAnswer(sel){
+  const ok = sel===currentWord.grafia;
+  // 🔎 Guardam el detall per poder veure errades
+  attemptLog.push({
+    numero: (currentMode === 'practice') ? (currentSeriesWords + 1) : (correctCount + errorCount + 1),
+    paraula: currentWord.word,
+    respostaUsuari: sel,
+    respostaCorrecta: currentWord.grafia,
+    correcta: ok
+  });
+  if (ok){
+    streak++; bestStreak=Math.max(bestStreak,streak);
+    let pts=10; if(streak>=5) pts=20; if(streak>=10) pts=30;
+    points+=pts; correctCount++;
+    document.getElementById('points').textContent=points;
+    document.getElementById('correct-count').textContent=correctCount;
+    document.getElementById('streak').textContent=streak;
+    showFeedback(true, pts);
+  } else {
+    errorCount++; streak=0; document.getElementById('streak').textContent=streak; showFeedback(false, 0);
+  }
+
+  // Reforç: mostra la paraula ben escrita durant 2 segons
+  const cs = document.getElementById('correct-spell');
+  cs.textContent = currentWord.word; // paraula completa amb la grafia correcta
+  cs.classList.remove('hidden');
+  setTimeout(()=>{ cs.classList.add('hidden'); }, 2000);
+
+  currentWordIndex++; currentSeriesWords++;
+  setTimeout(showNextWord, 2000); // esperam 2s perquè es vegi el reforç
+}
+
+function showSeriesCompletion(){ isGameActive=false; document.getElementById('series-points').textContent=points; document.getElementById('series-correct').textContent=correctCount; document.getElementById('series-completion').classList.remove('hidden'); }
+function continueNextSeries(){ currentSeriesWords=0; isGameActive=true; document.getElementById('series-completion').classList.add('hidden'); document.getElementById('words-completed').textContent='0'; document.getElementById('progress-bar').style.width='0%'; showNextWord(); }
+function showFeedback(isCorrect, pts){
+  const fb=document.getElementById('feedback-message'); const icon=document.getElementById('feedback-icon'); const text=document.getElementById('feedback-text'); const ptsText=document.getElementById('feedback-points'); const content=document.getElementById('feedback-content');
+  if(isCorrect){ icon.textContent='✓'; text.textContent='Correcte!'; text.style.color='#10b981'; content.style.borderColor='#10b981'; ptsText.textContent='+'+pts+' punts'; ptsText.style.color='#8b5cf6'; if(streak>=5) text.textContent='🔥 Increïble!'; if(streak>=10) text.textContent='⚡ Imparable!'; }
+  else { icon.textContent='✗'; text.textContent='Incorrecte'; text.style.color='#ef4444'; content.style.borderColor='#ef4444'; ptsText.textContent='Correcte: '+currentWord.grafia.toUpperCase(); ptsText.style.color='#64748b'; }
+  fb.classList.remove('hidden'); fb.style.animation='fadeIn 0.3s ease'; setTimeout(()=>fb.classList.add('hidden'), 1200);
+}
+
+
+
+// ✅ Enviar resultat al portal (wrapper) via postMessage
+function sendResultToPortal() {
+  if (sentResult) return;
+
+  const total = correctCount + errorCount;
+  if (total <= 0) return;
+
+  const encerts = correctCount;
+  const errades = errorCount;
+  const tempsSegons = startTimestamp ? Math.round((Date.now() - startTimestamp) / 1000) : null;
+
+  const errors = attemptLog
+    .filter(x => !x.correcta)
+    .map(x => ({
+      pregunta: x.numero,
+      respostaUsuari: String(x.respostaUsuari).toUpperCase(),
+      respostaCorrecta: String(x.respostaCorrecta).toUpperCase(),
+      paraula: x.paraula
+    }));
+
+  window.parent.postMessage({
+    type: 'ACT_RESULT',
+    activityId: 'A7',
+    payload: { total, encerts, errades, tempsSegons, errors }
+  }, '*');
+
+  sentResult = true;
+}
+// Listeners
+ document.getElementById('practice-mode-btn').addEventListener('click', ()=>{ isGameActive=true; startPracticeMode(); });
+ document.getElementById('competition-mode-btn').addEventListener('click', ()=>{ isGameActive=true; startCompetitionMode(); });
+ document.getElementById('back-to-menu-btn').addEventListener('click', ()=>{ isGameActive=false; clearInterval(timerInterval); showScreen('main-menu'); });
+ document.getElementById('continue-btn').addEventListener('click', continueNextSeries);
+ document.getElementById('finish-practice-btn').addEventListener('click', () => {
+  sendResultToPortal(); document.getElementById('series-completion').classList.add('hidden'); showScreen('main-menu'); });
+ document.getElementById('back-from-comp-btn').addEventListener('click', ()=>{ document.getElementById('competition-end').classList.add('hidden'); showScreen('main-menu'); });
+
+(function init(){ setupGrafiaButtons(); })();
+</script>
+</body>
+</html>

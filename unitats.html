@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Unitats</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="page-unitats">
+<section class="hero-photo" style="--hero-img: url('assets/hero/hero_main.webp'); --hero-img-mobile: url('assets/hero/hero_main_mobile.webp');">
+  <div class="topbar-overlay">
+    <a href="index.html" class="btn-secundari" style="text-decoration:none;display:inline-block;">Inici</a>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
+      <span id="who"></span>
+      <button id="profeBtn" class="btn-profe" style="display:none;" onclick="window.location='profe.html'">Panell del professor</button>
+      <button id="logoutBtn" class="btn-secundari">Sortir</button>
+    </div>
+  </div>
+  <div class="hero-inner" style="padding-top:44px;">
+    <h1 class="hero-title">Unitats</h1>
+    <p class="hero-sub">Tria una activitat per practicar. El bloc final és disponible quan vulguis.</p>
+  </div>
+</section>
+
+  
+
+  <div style="height:18px"></div>
+<section class="unit">
+    <h2 class="unit-title">Unitat 1 — ESPA</h2>
+    <div class="cards">
+      <a class="card" href="activitat1.html"><div class="card-icon">🔊</div><h3 class="card-title">Activitat 1</h3><p class="card-desc">Grafies R,RR,L,L·L,H,∅</p></a>
+      <a class="card" href="activitat2.html"><div class="card-icon">🎧</div><h3 class="card-title">Activitat 2</h3><p class="card-desc">Grafies s,ss,ç,c,z</p></a>
+      <a class="card" href="activitat3.html"><div class="card-icon">✅</div><h3 class="card-title">Activitat 3</h3><p class="card-desc">S sonora / S sorda</p></a>
+    </div>
+  </section>
+
+  <section class="unit alt">
+    <h2 class="unit-title">Unitat 2 — ESPA</h2>
+    <div class="cards">
+      <a class="card" href="activitat4.html"><div class="card-icon">✏️</div><h3 class="card-title">Activitat 4</h3><p class="card-desc">Grafies PeTaCa / BoDeGa</p></a>
+      <a class="card" href="activitat5.html"><div class="card-icon">🌀</div><h3 class="card-title">Activitat 5</h3><p class="card-desc">Grafies G, J, TG, TJ o TX</p></a>
+    </div>
+  </section>
+
+  <section class="unit">
+    <h2 class="unit-title">Unitat 3 — ESPA</h2>
+    <div class="cards">
+      <a class="card" href="activitat6.html"><div class="card-icon">📘</div><h3 class="card-title">Activitat 6</h3><p class="card-desc">Grafies B/V</p></a>
+      <a class="card" href="activitat7.html"><div class="card-icon">💬</div><h3 class="card-title">Activitat 7</h3><p class="card-desc">Grafies B, V, MB, MV, NV, MM o NM</p></a>
+    </div>
+  </section>
+
+  <section class="unit alt">
+    <h2 class="unit-title">Bloc final — Repàs d’ortografia (quan vulguis)</h2>
+    <div class="cards">
+      <a class="card" href="activitat8.html"><div class="card-icon">📝</div><h3 class="card-title">Accentuació + Dièresi (Nivell 1)</h3><p class="card-desc">Barreja bàsica (regles generals)</p></a>
+      <a class="card" href="activitat9.html"><div class="card-icon">🎯</div><h3 class="card-title">Accentuació + Dièresi (Nivell 2)</h3><p class="card-desc">Per defecte barrejat (pots triar Accentuació o Dièresi)</p></a>
+      <a class="card" href="activitat10.html"><div class="card-icon">🕵️</div><h3 class="card-title">Troba la intrusa</h3><p class="card-desc">Macrorepàs d’ortografia (3–4 paraules)</p></a>
+    </div>
+  </section>
+
+  <script type="module">
+    import { auth } from "./firebase.js";
+    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    const who = document.getElementById("who");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const profeBtn = document.getElementById("profeBtn");
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user) { window.location = "login.html"; return; }
+      if (who) who.textContent = "Sessió iniciada: " + user.email;
+      if (user.email === "josepantonipeiro@cepallevant.eu" && profeBtn) profeBtn.style.display = "inline-block";
+      else if (profeBtn) profeBtn.style.display = "none";
+    });
+
+    if (logoutBtn) logoutBtn.onclick = () => signOut(auth).then(() => window.location = "index.html");
+  </script>
+</body>
+</html>

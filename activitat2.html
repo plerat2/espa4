@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Activitat 2 — Grafies s, ss, ç, c, z</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .portal-topbar {
+      position: sticky;
+      top: 0;
+      z-index: 2000;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 28px rgba(0,0,0,0.08);
+    }
+    .portal-status { color:#555; font-size:0.95rem; }
+  </style>
+</head>
+<body>
+
+  <div class="portal-topbar">
+    <a href="unitats.html" class="btn-secundari" style="text-decoration:none;">← Tornar a unitats</a>
+    <div id="status" class="portal-status"></div>
+  </div>
+
+  <section class="unit" style="padding-top:22px;">
+    <h2 class="unit-title" style="margin-bottom:22px;">Activitat 2 — Grafies s, ss, ç, c, z</h2>
+    <div style="max-width:980px;margin:0 auto;">
+      <iframe id="frame" src="activitat2_iframe.html" style="width:100%;height:850px;border:none;border-radius:22px;overflow:hidden;background:white;" allow="fullscreen"></iframe>
+      <p style="text-align:center;color:#666;margin-top:12px;">Quan acabis, el resultat s’enviarà automàticament al portal.</p>
+    </div>
+  </section>
+
+  <script type="module">
+    import { auth, rtdb } from "./firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { ref, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const status = document.getElementById("status");
+    const frame = document.getElementById("frame");
+    let currentUser = null;
+    const ACTIVITAT_ID = "A2";
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location = "login.html";
+        return;
+      }
+      currentUser = user;
+      status.textContent = `Sessió iniciada: ${user.email}`;
+    });
+
+    window.addEventListener("message", async (event) => {
+      if (!frame || event.source !== frame.contentWindow) return;
+      const data = event.data;
+      if (!data) return;
+
+      // Format: { type:'ACT_RESULT', activityId:'A1', payload:{...} }
+      if (!(data.type === "ACT_RESULT" && data.activityId === ACTIVITAT_ID)) return;
+
+      const p = data.payload;
+      if (!p || p.encerts === undefined || p.total === undefined) return;
+      if (!currentUser) return;
+
+      try {
+        status.textContent = "Desant resultat…";
+        await push(ref(rtdb, `resultats/${ACTIVITAT_ID}`), {
+          uid: currentUser.uid,
+          email: currentUser.email,
+          activitat: ACTIVITAT_ID,
+          encerts: p.encerts,
+          total: p.total,
+          errades: (p.errades !== undefined && p.errades !== null) ? p.errades : (p.total - p.encerts),
+          tempsSegons: (p.tempsSegons !== undefined) ? p.tempsSegons : null,
+          errors: p.errors || [],
+          timestamp: new Date().toISOString()
+        });
+
+        status.textContent = "✅ Desat! Tornant a unitats…";
+        setTimeout(() => window.location = "unitats.html", 700);
+      } catch (e) {
+        console.error(e);
+        status.textContent = "❌ Error en desar (revisa regles/connexió)";
+        alert("❌ No s'ha pogut desar el resultat. Revisa regles i connexió.");
+      }
+    });
+  </script>
+
+</body>
+</html>

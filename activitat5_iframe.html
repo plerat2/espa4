@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="ca" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Entrena les Grafies – G / J / TG / TJ / TX (v2)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet">
+  <style>
+    body { box-sizing: border-box; }
+    * { font-family: 'Poppins', sans-serif; }
+    .grafia-button { transition: all 0.2s ease; position: relative; }
+    .grafia-button:hover { transform: translateY(-2px); }
+    .grafia-button:active { transform: scale(0.95); }
+    .correct-animation { animation: correctPulse 0.5s ease; }
+    .incorrect-animation { animation: shake 0.5s ease; }
+    @keyframes correctPulse { 0%, 100% { transform: scale(1);} 50% { transform: scale(1.1);} }
+    @keyframes shake { 0%, 100% { transform: translateX(0);} 25% { transform: translateX(-5px);} 75% { transform: translateX(5px);} }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px);} to { opacity: 1; transform: translateY(0);} }
+    .confetti { position: fixed; pointer-events: none; z-index: 1000; }
+    .mode-card { transition: all 0.3s ease; }
+    .mode-card:hover { transform: translateY(-5px); }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js" type="text/javascript"></script>
+</head>
+ <body class="h-full bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 overflow-auto">
+  <div id="app-container" class="w-full min-h-full p-4 md:p-6"><!-- Main Menu Screen -->
+   <div id="main-menu" class="max-w-4xl mx-auto"><!-- Header -->
+    <div class="text-center mb-8">
+     <h1 id="main-title" class="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 mb-3">⚡ Entrena les Grafies</h1>
+     <p id="instruction-text" class="text-slate-700 text-base md:text-lg font-semibold">Completa cada paraula amb la grafia correcta: G, J, TG, TJ o TX</p>
+    </div><!-- Mode Selection -->
+    <div class="grid md:grid-cols-2 gap-6 mb-8"><!-- Practice Mode -->
+     <div class="mode-card bg-gradient-to-br from-blue-400 to-blue-500 rounded-3xl p-8 shadow-2xl border-4 border-blue-300 cursor-pointer" id="practice-mode-btn">
+      <div class="text-center text-white">
+       <div class="text-6xl mb-4">
+        📚
+       </div>
+       <h2 class="text-3xl font-black mb-3">Mode Pràctica</h2>
+       <p class="text-blue-100 font-semibold mb-4">Sèries de 10 paraules</p>
+       <ul class="text-left text-blue-100 text-sm space-y-2 mb-6">
+        <li>✓ Sense límit de temps</li>
+        <li>✓ Continua quan vulguis</li>
+        <li>✓ Perfecte per aprendre</li>
+       </ul>
+       <div class="bg-white text-blue-600 font-black py-3 px-6 rounded-full">
+        Comença
+       </div>
+      </div>
+     </div><!-- Competition Mode -->
+     <div class="mode-card bg-gradient-to-br from-orange-400 to-red-500 rounded-3xl p-8 shadow-2xl border-4 border-orange-300 cursor-pointer" id="competition-mode-btn">
+      <div class="text-center text-white">
+       <div class="text-6xl mb-4">
+        ⏱️
+       </div>
+       <h2 class="text-3xl font-black mb-3">Mode Competició</h2>
+       <p class="text-orange-100 font-semibold mb-4">2 minuts de repte</p>
+       <ul class="text-left text-orange-100 text-sm space-y-2 mb-6">
+        <li>✓ Contra el cronòmetre</li>
+        <li>✓ Resultat guardat al portal</li>
+        <li>✓ Repte personal!</li>
+       </ul>
+       <div class="bg-white text-orange-600 font-black py-3 px-6 rounded-full">
+        Competeix
+       </div>
+      </div>
+     </div>
+    </div>
+   </div><!-- Game Screen -->
+   <div id="game-screen" class="hidden"><!-- Header with back button -->
+    <div class="flex justify-between items-center mb-4"><button id="back-to-menu-btn" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-full shadow-lg"> ← Menú </button>
+     <div id="mode-indicator" class="text-lg font-black text-slate-700"></div>
+     <div class="w-20"></div>
+    </div><!-- Timer (only for competition mode) -->
+    <div id="timer-container" class="hidden text-center mb-4">
+     <div class="bg-gradient-to-br from-red-500 to-orange-500 text-white rounded-2xl px-8 py-4 inline-block shadow-lg">
+      <div class="text-sm font-bold uppercase tracking-wider">
+       Temps Restant
+      </div>
+      <div class="text-4xl font-black">
+       <span id="timer">2:00</span>
+      </div>
+     </div>
+    </div><!-- Score Dashboard -->
+    <div class="flex flex-wrap justify-center gap-3 mb-6 max-w-4xl mx-auto">
+     <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl px-6 py-3 shadow-lg">
+      <div class="text-white/80 text-xs font-bold uppercase tracking-wider">
+       Punts
+      </div>
+      <div class="text-white text-2xl font-black">
+       <span id="points">0</span> pts
+      </div>
+     </div>
+     <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl px-6 py-3 shadow-lg">
+      <div class="text-white/80 text-xs font-bold uppercase tracking-wider">
+       Encerts
+      </div>
+      <div class="text-white text-2xl font-black">
+       <span id="correct-count">0</span>
+      </div>
+     </div>
+     <div class="bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl px-6 py-3 shadow-lg">
+      <div class="text-white/80 text-xs font-bold uppercase tracking-wider">
+       Ratxa
+      </div>
+      <div class="text-white text-2xl font-black">
+       🔥 <span id="streak">0</span>
+      </div>
+     </div>
+     <div id="round-display" class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl px-6 py-3 shadow-lg">
+      <div class="text-white/80 text-xs font-bold uppercase tracking-wider">
+       Paraules
+      </div>
+      <div class="text-white text-2xl font-black">
+       <span id="words-completed">0</span>/10
+      </div>
+     </div>
+    </div><!-- Progress Bar -->
+    <div class="max-w-3xl mx-auto mb-6">
+     <div class="bg-slate-200 rounded-full h-3 overflow-hidden shadow-inner">
+      <div id="progress-bar" class="bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 h-full transition-all duration-500 ease-out" style="width: 0%"></div>
+     </div>
+    </div><!-- Grafia Buttons -->
+    <div class="flex flex-wrap justify-center gap-3 mb-6 max-w-3xl mx-auto"><button class="grafia-button bg-gradient-to-br from-rose-400 to-rose-500 hover:from-rose-500 hover:to-rose-600 text-white rounded-2xl px-8 py-4 shadow-lg border-4 border-rose-300" data-grafia="g"><span class="text-4xl font-black">G</span></button> <button class="grafia-button bg-gradient-to-br from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white rounded-2xl px-8 py-4 shadow-lg border-4 border-blue-300" data-grafia="j"><span class="text-4xl font-black">J</span></button> <button class="grafia-button bg-gradient-to-br from-emerald-400 to-emerald-500 hover:from-emerald-500 hover:to-emerald-600 text-white rounded-2xl px-8 py-4 shadow-lg border-4 border-emerald-300" data-grafia="tg"><span class="text-4xl font-black">TG</span></button> <button class="grafia-button bg-gradient-to-br from-violet-400 to-violet-500 hover:from-violet-500 hover:to-violet-600 text-white rounded-2xl px-8 py-4 shadow-lg border-4 border-violet-300" data-grafia="tj"><span class="text-4xl font-black">TJ</span></button> <button class="grafia-button bg-gradient-to-br from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white rounded-2xl px-8 py-4 shadow-lg border-4 border-orange-300" data-grafia="tx"><span class="text-4xl font-black">TX</span></button>
+    </div><!-- Current Word Display -->
+    <div class="max-w-2xl mx-auto mb-6">
+     <div class="bg-gradient-to-br from-white to-slate-50 rounded-3xl p-8 shadow-2xl border-4 border-slate-200">
+      <div class="text-center">
+       <div class="text-slate-500 text-sm font-bold uppercase tracking-wider mb-3">
+        Quina és la grafia correcta?
+       </div>
+       <div id="current-word" class="text-5xl md:text-7xl font-black text-slate-800 mb-4 tracking-tight">
+        <!-- Word here -->
+       </div>
+       <div id="word-hint" class="text-slate-400 text-sm font-semibold italic hidden mt-2">
+        <!-- Hint -->
+       </div>
+       <div class="flex justify-center gap-2 mt-4">
+        <div class="h-2 w-2 bg-purple-400 rounded-full animate-pulse"></div>
+        <div class="h-2 w-2 bg-pink-400 rounded-full animate-pulse" style="animation-delay: 0.2s"></div>
+        <div class="h-2 w-2 bg-orange-400 rounded-full animate-pulse" style="animation-delay: 0.4s"></div>
+       </div>
+      </div>
+     </div>
+    </div><!-- Feedback Message -->
+    <div id="feedback-message" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 hidden">
+     <div id="feedback-content" class="bg-white rounded-3xl px-8 py-6 shadow-2xl border-4 text-center">
+      <div id="feedback-icon" class="text-6xl mb-2"></div>
+      <div id="feedback-text" class="text-2xl font-black"></div>
+      <div id="feedback-points" class="text-lg font-bold mt-1"></div>
+     </div>
+    </div>
+   </div><!-- Series Completion Modal (Practice Mode) -->
+   <div id="series-completion" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-10 text-center shadow-2xl max-w-lg mx-4 border-4 border-blue-200">
+     <div class="text-7xl mb-4">
+      🎉
+     </div>
+     <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-3">Sèrie Completada!</h2>
+     <div class="bg-white rounded-2xl p-6 mb-6 shadow-lg">
+      <div class="grid grid-cols-2 gap-4">
+       <div>
+        <div class="text-3xl font-black text-purple-600">
+         <span id="series-points">0</span>
+        </div>
+        <div class="text-xs text-slate-600 font-bold uppercase">
+         Punts
+        </div>
+       </div>
+       <div>
+        <div class="text-3xl font-black text-emerald-600">
+         <span id="series-correct">0</span>/10
+        </div>
+        <div class="text-xs text-slate-600 font-bold uppercase">
+         Encerts
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="flex gap-3 justify-center"><button id="continue-btn" class="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transform hover:scale-105 transition-all"> ➜ Continuar (10 més) </button> <button id="finish-practice-btn" class="bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transform hover:scale-105 transition-all"> ✓ Acabar </button>
+     </div>
+    </div>
+   </div><!-- Competition End Modal -->
+   <div id="competition-end" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="bg-gradient-to-br from-orange-50 to-red-50 rounded-3xl p-10 text-center shadow-2xl max-w-lg mx-4 border-4 border-orange-200">
+     <div class="text-7xl mb-4">
+      🏆
+     </div>
+     <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-red-600 mb-3">Temps Acabat!</h2>
+     <div class="bg-white rounded-2xl p-6 mb-6 shadow-lg">
+      <div class="grid grid-cols-2 gap-4">
+       <div>
+        <div class="text-3xl font-black text-purple-600">
+         <span id="comp-points">0</span>
+        </div>
+        <div class="text-xs text-slate-600 font-bold uppercase">
+         Punts Totals
+        </div>
+       </div>
+       <div>
+        <div class="text-3xl font-black text-emerald-600">
+         <span id="comp-correct">0</span>
+        </div>
+        <div class="text-xs text-slate-600 font-bold uppercase">
+         Encerts
+        </div>
+       </div>
+       <div>
+        <div class="text-3xl font-black text-pink-600">
+         <span id="comp-streak">0</span>
+        </div>
+        <div class="text-xs text-slate-600 font-bold uppercase">
+         Millor Ratxa
+        </div>
+       </div>
+       <div>
+        <div class="text-3xl font-black text-orange-600">
+         <span id="comp-accuracy">0</span>%
+        </div>
+        <div class="text-xs text-slate-600 font-bold uppercase">
+         Precisió
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="flex gap-3 justify-center"><button id="back-from-comp-btn" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transform hover:scale-105 transition-all"> ← Tornar al menú </button>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+// Word database – 84 paraules (G=20, J=14, TG=18, TJ=12, TX=20)
+const wordsData = [ // G (20) 
+ { word: "gel", grafia: "g" }, 
+ { word: "genoll", grafia: "g" }, 
+ { word: "gener", grafia: "g" }, 
+ { word: "general", grafia: "g" }, 
+ { word: "geni", grafia: "g" }, 
+ { word: "gent", grafia: "g" }, 
+ { word: "gimnàs", grafia: "g" }, 
+ { word: "girafa", grafia: "g" }, 
+ { word: "girar", grafia: "g" }, 
+ { word: "ginesta", grafia: "g" }, 
+ { word: "origen", grafia: "g" }, 
+ { word: "religió", grafia: "g" }, 
+ { word: "regió", grafia: "g" }, 
+ { word: "energia", grafia: "g" }, 
+ { word: "gelosia", grafia: "g" }, 
+ { word: "argent", grafia: "g" }, 
+ { word: "pagès", grafia: "g" }, 
+ { word: "llegir", grafia: "g" }, 
+ { word: "suggerir", grafia: "g" }, 
+ { word: "magenta", grafia: "g" }, 
+ // J (14) 
+ { word: "jardí", grafia: "j" }, 
+ { word: "jaqueta", grafia: "j" }, 
+ { word: "jove", grafia: "j" }, 
+ { word: "joguina", grafia: "j" }, 
+ { word: "joc", grafia: "j" }, 
+ { word: "juliol", grafia: "j" }, 
+ { word: "joia", grafia: "j" }, 
+ { word: "jeure", grafia: "j" }, 
+ { word: "jornada", grafia: "j" }, 
+ { word: "jersei", grafia: "j" }, 
+ { word: "jerarquia", grafia: "j" }, 
+ { word: "juny", grafia: "j" }, 
+ { word: "juvenil", grafia: "j" }, 
+ { word: "majoria", grafia: "j" }, 
+ // TG (18) 
+ { word: "metge", grafia: "tg" }, 
+ { word: "metgessa", grafia: "tg" }, 
+ { word: "muntatge", grafia: "tg" }, 
+ { word: "rodatge", grafia: "tg" }, 
+ { word: "metratge", grafia: "tg" }, 
+ { word: "blindatge", grafia: "tg" }, 
+ { word: "viatge", grafia: "tg" }, 
+ { word: "viatger", grafia: "tg" }, 
+ { word: "passatge", grafia: "tg" }, 
+ { word: "missatge", grafia: "tg" }, 
+ { word: "avantatge", grafia: "tg" }, 
+ { word: "desavantatge", grafia: "tg" }, 
+ { word: "reportatge", grafia: "tg" }, 
+ { word: "garatge", grafia: "tg" }, 
+ { word: "sabotatge", grafia: "tg" }, 
+ { word: "arbitratge", grafia: "tg" }, 
+ { word: "embalatge", grafia: "tg" }, 
+ { word: "equipatge", grafia: "tg" }, 
+ // TJ (12) 
+ { word: "platja", grafia: "tj" }, 
+ { word: "pitjor", grafia: "tj" }, 
+ { word: "desitjar", grafia: "tj" }, 
+ { word: "rebutjar", grafia: "tj" }, 
+ { word: "mitjó", grafia: "tj" }, 
+ { word: "assetjar", grafia: "tj" }, 
+ { word: "assetjament", grafia: "tj" }, 
+ { word: "sotjar", grafia: "tj" }, 
+ { word: "estotjar", grafia: "tj" }, 
+ { word: "llotja", grafia: "tj" }, 
+ { word: "lletja", grafia: "tj" }, 
+ { word: "jutjar", grafia: "tj" }, 
+ // TX (19) 
+ { word: "cotxe", grafia: "tx" }, 
+ { word: "caputxa", grafia: "tx" }, 
+ { word: "pitxer", grafia: "tx" }, 
+ { word: "fitxa", grafia: "tx" }, 
+ { word: "fitxar", grafia: "tx" }, 
+ { word: "fitxer", grafia: "tx" }, 
+ { word: "despatx", grafia: "tx" }, 
+ { word: "despatxar", grafia: "tx" }, 
+ { word: "metxa", grafia: "tx" }, 
+ { word: "bretxa", grafia: "tx" }, 
+ { word: "motxilla", grafia: "tx" }, 
+ { word: "ratxa", grafia: "tx" }, 
+ { word: "esquitx", grafia: "tx" }, 
+ { word: "esquitxar", grafia: "tx" }, 
+ { word: "esquitxos", grafia: "tx" }, 
+ { word: "botxí", grafia: "tx" }, 
+ { word: "cotxet", grafia: "tx" }, 
+ { word: "caputxeta", grafia: "tx" }, 
+ { word: "atxa", grafia: "tx" }
+];
+
+// Game state
+let currentMode = null; // 'practice' or 'competition'
+let startTimestamp = null;
+let attemptLog = [];
+let sentResult = false;
+let points = 0;
+let correctCount = 0;
+let errorCount = 0;
+let streak = 0;
+let bestStreak = 0;
+let currentWordIndex = 0;
+let shuffledWords = [];
+let currentWord = null;
+let wordsPerSeries = 10;
+let currentSeriesWords = 0;
+let isGameActive = false;
+
+// Competition mode
+let timerInterval = null;
+let timeRemaining = 120; // 2 minutes in seconds
+
+// Default config
+const defaultConfig = {
+  activity_title: "⚡ Entrena les Grafies",
+  instruction_text: "Completa cada paraula amb la grafia correcta: G, J, TG, TJ o TX"
+};
+
+function shuffleArray(array) {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+// Show/Hide screens
+function showScreen(screenId) {
+  document.getElementById('main-menu').classList.add('hidden');
+  document.getElementById('game-screen').classList.add('hidden');
+  document.getElementById(screenId).classList.remove('hidden');
+}
+
+// Start practice mode
+function startPracticeMode() {
+  currentMode = 'practice';
+  resetGameState();
+  startTimestamp = Date.now();
+  attemptLog = [];
+  sentResult = false;
+  shuffledWords = shuffleArray([...wordsData]);
+  document.getElementById('mode-indicator').textContent = '📚 Mode Pràctica';
+  document.getElementById('timer-container').classList.add('hidden');
+  document.getElementById('round-display').classList.remove('hidden');
+  showScreen('game-screen');
+  showNextWord();
+}
+
+// Start competition mode
+function startCompetitionMode() {
+  currentMode = 'competition';
+  resetGameState();
+  startTimestamp = Date.now();
+  attemptLog = [];
+  sentResult = false;
+  shuffledWords = shuffleArray([...wordsData]);
+  timeRemaining = 120;
+  isGameActive = true;
+  document.getElementById('mode-indicator').textContent = '⏱️ Mode Competició';
+  document.getElementById('timer-container').classList.remove('hidden');
+  document.getElementById('round-display').classList.remove('hidden');
+  showScreen('game-screen');
+  startTimer();
+  showNextWord();
+}
+
+// Timer for competition mode
+function startTimer() {
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    if (!isGameActive) { clearInterval(timerInterval); return; }
+    timeRemaining--;
+    updateTimerDisplay();
+    if (timeRemaining <= 0) { endCompetition(); }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const minutes = Math.floor(timeRemaining / 60);
+  const seconds = timeRemaining % 60;
+  document.getElementById('timer').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
+function endCompetition() {
+  isGameActive = false;
+  clearInterval(timerInterval);
+  const totalAttempts = correctCount + errorCount;
+  const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 0;
+  document.getElementById('comp-points').textContent = points;
+  document.getElementById('comp-correct').textContent = correctCount;
+  document.getElementById('comp-streak').textContent = bestStreak;
+  document.getElementById('comp-accuracy').textContent = accuracy;
+  document.getElementById('competition-end').classList.remove('hidden');
+  playCompletionSound();
+  createConfetti();
+}
+
+// Reset game state
+function resetGameState() {
+  points = 0;
+  correctCount = 0;
+  errorCount = 0;
+  streak = 0;
+  bestStreak = 0;
+  currentWordIndex = 0;
+  currentSeriesWords = 0;
+  document.getElementById('points').textContent = '0';
+  document.getElementById('correct-count').textContent = '0';
+  document.getElementById('streak').textContent = '0';
+  document.getElementById('words-completed').textContent = '0';
+  document.getElementById('progress-bar').style.width = '0%';
+}
+
+// Show next word
+function showNextWord() {
+  if (currentMode === 'practice' && currentSeriesWords >= wordsPerSeries) { showSeriesCompletion(); return; }
+  if (currentWordIndex >= shuffledWords.length) { shuffledWords = shuffleArray([...wordsData]); currentWordIndex = 0; }
+  currentWord = shuffledWords[currentWordIndex];
+  const wordDisplay = document.getElementById('current-word');
+
+  // Replace the target grafia with underscore
+  let displayWord = currentWord.word;
+  const grafiaToFind = currentWord.grafia.toLowerCase();
+  let regex;
+  if (grafiaToFind === 'tg') { regex = /tg/gi; }
+  else if (grafiaToFind === 'tj') { regex = /tj/gi; }
+  else if (grafiaToFind === 'tx') { regex = /tx/gi; }
+  else if (grafiaToFind === 'j') { regex = /j/gi; }
+  else if (grafiaToFind === 'g') { regex = /g(?=[eéiïèEÉÈIÍÏ])/giu; } // només g davant de e/i
+
+  if (regex) { displayWord = displayWord.replace(regex, '_'); }
+  wordDisplay.textContent = displayWord;
+  wordDisplay.style.animation = 'none';
+  setTimeout(() => { wordDisplay.style.animation = 'fadeIn 0.5s ease'; }, 10);
+  document.getElementById('word-hint').classList.add('hidden');
+
+  if (currentMode === 'practice') {
+    document.getElementById('words-completed').textContent = currentSeriesWords;
+    const progress = (currentSeriesWords / wordsPerSeries) * 100;
+    document.getElementById('progress-bar').style.width = progress + '%';
+  } else {
+    document.getElementById('words-completed').textContent = correctCount;
+    document.getElementById('progress-bar').style.width = '100%';
+  }
+}
+
+// Setup grafia buttons
+function setupGrafiaButtons() {
+  const buttons = document.querySelectorAll('.grafia-button');
+  buttons.forEach(button => {
+    button.addEventListener('click', () => {
+      if (!currentWord || !isGameActive) return;
+      handleAnswer(button.dataset.grafia);
+    });
+  });
+}
+
+// Handle answer
+function handleAnswer(selectedGrafia) {
+  if (!currentWord) return;
+  const isCorrect = selectedGrafia === currentWord.grafia;
+
+// 🔎 Guardam el detall per poder veure errades
+attemptLog.push({
+  numero: (currentMode === 'practice') ? (currentSeriesWords + 1) : (correctCount + errorCount + 1),
+  paraula: currentWord.word,
+  respostaUsuari: selectedGrafia,
+  respostaCorrecta: currentWord.grafia,
+  correcta: isCorrect
+});
+  if (isCorrect) {
+    streak++;
+    if (streak > bestStreak) bestStreak = streak;
+    let pointsEarned = 10;
+    if (streak >= 5) pointsEarned = 20;
+    if (streak >= 10) pointsEarned = 30;
+    points += pointsEarned;
+    correctCount++;
+    document.getElementById('points').textContent = points;
+    document.getElementById('correct-count').textContent = correctCount;
+    document.getElementById('streak').textContent = streak;
+    showFeedback(true, pointsEarned);
+  } else {
+    errorCount++;
+    streak = 0;
+    document.getElementById('streak').textContent = streak;
+    showFeedback(false, 0);
+  }
+  currentWordIndex++;
+  currentSeriesWords++;
+  setTimeout(() => { showNextWord(); }, 1500);
+}
+
+// Show series completion (practice mode)
+function showSeriesCompletion() {
+  isGameActive = false;
+  document.getElementById('series-points').textContent = points;
+  document.getElementById('series-correct').textContent = correctCount;
+  document.getElementById('series-completion').classList.remove('hidden');
+  playCompletionSound();
+}
+
+// Continue to next series
+function continueNextSeries() {
+  currentSeriesWords = 0;
+  isGameActive = true;
+  document.getElementById('series-completion').classList.add('hidden');
+  document.getElementById('words-completed').textContent = '0';
+  document.getElementById('progress-bar').style.width = '0%';
+  showNextWord();
+}
+
+// Sound effects
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+function playCorrectSound() {
+  const oscillator = audioContext.createOscillator();
+  const gainNode = audioContext.createGain();
+  oscillator.connect(gainNode); gainNode.connect(audioContext.destination);
+  oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
+  oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1);
+  oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2);
+  gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+  oscillator.start(audioContext.currentTime);
+  oscillator.stop(audioContext.currentTime + 0.4);
+}
+function playStreakSound() {
+  const oscillator = audioContext.createOscillator();
+  const gainNode = audioContext.createGain();
+  oscillator.connect(gainNode); gainNode.connect(audioContext.destination);
+  oscillator.type = 'triangle';
+  oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+  oscillator.frequency.exponentialRampToValueAtTime(1760, audioContext.currentTime + 0.2);
+  gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+  oscillator.start(audioContext.currentTime);
+  oscillator.stop(audioContext.currentTime + 0.3);
+}
+function playIncorrectSound() {
+  const oscillator = audioContext.createOscillator();
+  const gainNode = audioContext.createGain();
+  oscillator.connect(gainNode); gainNode.connect(audioContext.destination);
+  oscillator.type = 'sawtooth';
+  oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+  oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.3);
+  gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+  oscillator.start(audioContext.currentTime);
+  oscillator.stop(audioContext.currentTime + 0.3);
+}
+function playCompletionSound() {
+  const notes = [523.25, 659.25, 783.99, 1046.50];
+  notes.forEach((freq, index) => {
+    setTimeout(() => {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode); gainNode.connect(audioContext.destination);
+      oscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.5);
+    }, index * 100);
+  });
+}
+
+// Show feedback
+function showFeedback(isCorrect, pointsEarned) {
+  const feedback = document.getElementById('feedback-message');
+  const icon = document.getElementById('feedback-icon');
+  const text = document.getElementById('feedback-text');
+  const pointsText = document.getElementById('feedback-points');
+  const content = document.getElementById('feedback-content');
+  const hint = document.getElementById('word-hint');
+  hint.textContent = 'Paraula completa: ' + currentWord.word;
+  hint.classList.remove('hidden');
+  if (isCorrect) {
+    if (streak >= 5) { playStreakSound(); } else { playCorrectSound(); }
+    icon.textContent = '✓';
+    text.textContent = 'Correcte!';
+    text.style.color = '#10b981';
+    content.style.borderColor = '#10b981';
+    pointsText.textContent = '+' + pointsEarned + ' punts';
+    pointsText.style.color = '#8b5cf6';
+    if (streak >= 5) { text.textContent = '🔥 Increïble!'; }
+    if (streak >= 10) { text.textContent = '⚡ Imparable!'; }
+  } else {
+    playIncorrectSound();
+    icon.textContent = '✗';
+    text.textContent = 'Incorrecte';
+    text.style.color = '#ef4444';
+    content.style.borderColor = '#ef4444';
+    pointsText.textContent = 'Correcte: ' + currentWord.grafia.toUpperCase();
+    pointsText.style.color = '#64748b';
+  }
+  feedback.classList.remove('hidden');
+  feedback.style.animation = 'fadeIn 0.3s ease';
+  setTimeout(() => { feedback.classList.add('hidden'); }, 1200);
+}
+
+// Confetti effect
+function createConfetti() {
+  const colors = ['#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ef4444'];
+  for (let i = 0; i < 50; i++) {
+    setTimeout(() => {
+      const confetti = document.createElement('div');
+      confetti.className = 'confetti';
+      confetti.style.left = Math.random() * 100 + '%';
+      confetti.style.top = '-10px';
+      confetti.style.width = '10px';
+      confetti.style.height = '10px';
+      confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+      confetti.style.transform = 'rotate(' + (Math.random() * 360) + 'deg)';
+      document.body.appendChild(confetti);
+      let posY = -10; let posX = parseFloat(confetti.style.left); let rotation = 0;
+      const speed = 2 + Math.random() * 3; const drift = (Math.random() - 0.5) * 2;
+      const fall = setInterval(() => {
+        posY += speed; posX += drift; rotation += 5;
+        confetti.style.top = posY + 'px'; confetti.style.left = posX + '%'; confetti.style.transform = 'rotate(' + rotation + 'deg)';
+        if (posY > window.innerHeight) { clearInterval(fall); confetti.remove(); }
+      }, 20);
+    }, i * 30);
+  }
+}
+
+
+
+// ✅ Enviar resultat al portal (wrapper) via postMessage
+function sendResultToPortal() {
+  if (sentResult) return;
+
+  const total = correctCount + errorCount;
+  if (total <= 0) return;
+
+  const encerts = correctCount;
+  const errades = errorCount;
+  const tempsSegons = startTimestamp ? Math.round((Date.now() - startTimestamp) / 1000) : null;
+
+  const errors = attemptLog
+    .filter(x => !x.correcta)
+    .map(x => ({
+      pregunta: x.numero,
+      respostaUsuari: String(x.respostaUsuari).toUpperCase(),
+      respostaCorrecta: String(x.respostaCorrecta).toUpperCase(),
+      paraula: x.paraula
+    }));
+
+  window.parent.postMessage({
+    type: 'ACT_RESULT',
+    activityId: 'A5',
+    payload: { total, encerts, errades, tempsSegons, errors }
+  }, '*');
+
+  sentResult = true;
+}
+// Event Listeners
+
+document.getElementById('practice-mode-btn').addEventListener('click', () => { isGameActive = true; startPracticeMode(); });
+
+document.getElementById('competition-mode-btn').addEventListener('click', () => { isGameActive = true; startCompetitionMode(); });
+
+document.getElementById('back-to-menu-btn').addEventListener('click', () => { isGameActive = false; clearInterval(timerInterval); showScreen('main-menu'); });
+
+document.getElementById('continue-btn').addEventListener('click', () => { continueNextSeries(); });
+
+document.getElementById('finish-practice-btn').addEventListener('click', () => {
+  sendResultToPortal(); document.getElementById('series-completion').classList.add('hidden'); showScreen('main-menu'); });
+
+document.getElementById('back-from-comp-btn').addEventListener('click', () => { document.getElementById('competition-end').classList.add('hidden'); showScreen('main-menu'); });
+
+// Config change handler
+async function onConfigChange(config) {
+  const title = config.activity_title || defaultConfig.activity_title;
+  const instruction = config.instruction_text || defaultConfig.instruction_text;
+  document.getElementById('main-title').innerHTML = title;
+  document.getElementById('instruction-text').textContent = instruction;
+}
+
+// Map to capabilities
+function mapToCapabilities(config) { return { recolorables: [], borderables: [], fontEditable: undefined, fontSizeable: undefined }; }
+
+// Map to edit panel values
+function mapToEditPanelValues(config) { return new Map([
+  ["activity_title", config.activity_title || defaultConfig.activity_title],
+  ["instruction_text", config.instruction_text || defaultConfig.instruction_text]
+]); }
+
+// Initialize
+async function init() {
+  setupGrafiaButtons();
+  if (window.elementSdk) {
+    window.elementSdk.init({ defaultConfig, onConfigChange, mapToCapabilities, mapToEditPanelValues });
+  }
+}
+init();
+</script>
+</body>
+</html>

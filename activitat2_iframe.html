@@ -1,0 +1,1005 @@
+<!doctype html>
+<html lang="ca" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Entrena les Grafies - Català</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+    * {
+      font-family: 'Poppins', sans-serif;
+    }
+    .grafia-button {
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .grafia-button:hover {
+      transform: translateY(-2px);
+    }
+    .grafia-button:active {
+      transform: scale(0.95);
+    }
+    .correct-animation {
+      animation: correctPulse 0.5s ease;
+    }
+    .incorrect-animation {
+      animation: shake 0.5s ease;
+    }
+    @keyframes correctPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .confetti {
+      position: fixed;
+      pointer-events: none;
+      z-index: 1000;
+    }
+    .mode-card {
+      transition: all 0.3s ease;
+    }
+    .mode-card:hover {
+      transform: translateY(-5px);
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+ </head>
+ <body class="h-full bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 overflow-auto">
+  <div id="app-container" class="w-full min-h-full p-4 md:p-6"><!-- Main Menu Screen -->
+   <div id="main-menu" class="max-w-4xl mx-auto"><!-- Header -->
+    <div class="text-center mb-8">
+     <h1 id="main-title" class="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 mb-3">⚡Grafies s,ss,ç,c,z </h1>
+     <p id="instruction-text" class="text-slate-700 text-base md:text-lg font-semibold">Classifica cada paraula segons la seva grafia correcta</p>
+    </div><!-- Mode Selection -->
+    <div class="grid md:grid-cols-2 gap-6 mb-8"><!-- Practice Mode -->
+     <div class="mode-card bg-gradient-to-br from-blue-400 to-blue-500 rounded-3xl p-8 shadow-2xl border-4 border-blue-300 cursor-pointer" id="practice-mode-btn">
+      <div class="text-center text-white">
+       <div class="text-6xl mb-4">
+        📚
+       </div>
+       <h2 class="text-3xl font-black mb-3">Mode Pràctica</h2>
+       <p class="text-blue-100 font-semibold mb-4">Sèries de 10 paraules</p>
+       <ul class="text-left text-blue-100 text-sm space-y-2 mb-6">
+        <li>✓ Sense límit de temps</li>
+        <li>✓ Continua quan vulguis</li>
+        <li>✓ Perfecte per aprendre</li>
+       </ul>
+       <div class="bg-white text-blue-600 font-black py-3 px-6 rounded-full">
+        Comença
+       </div>
+      </div>
+     </div><!-- Competition Mode -->
+     <div class="mode-card bg-gradient-to-br from-orange-400 to-red-500 rounded-3xl p-8 shadow-2xl border-4 border-orange-300 cursor-pointer" id="competition-mode-btn">
+      <div class="text-center text-white">
+       <div class="text-6xl mb-4">
+        ⏱️
+       </div>
+       <h2 class="text-3xl font-black mb-3">Mode Competició</h2>
+       <p class="text-orange-100 font-semibold mb-4">2 minuts de repte</p>
+       <ul class="text-left text-orange-100 text-sm space-y-2 mb-6">
+        <li>✓ Contra el cronòmetre</li>
+        <li>✓ Guarda el teu rècord</li>
+        <li>✓ Puja al rànquing!</li>
+       </ul>
+       <div class="bg-white text-orange-600 font-black py-3 px-6 rounded-full">
+        Competeix
+       </div>
+      </div>
+     </div>
+    </div><!-- Ranking Button -->
+    <div class="text-center"><button id="ranking-btn" class="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-black py-4 px-8 rounded-full shadow-lg transform hover:scale-105 transition-all text-lg"> 🏆 Veure Rànquing </button>
+    </div>
+   </div><!-- Game Screen -->
+   <div id="game-screen" class="hidden"><!-- Header with back button -->
+    <div class="flex justify-between items-center mb-4"><button id="back-to-menu-btn" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-full shadow-lg"> ← Menú </button>
+     <div id="mode-indicator" class="text-lg font-black text-slate-700"></div>
+     <div class="w-20"></div>
+    </div><!-- Timer (only for competition mode) -->
+    <div id="timer-container" class="hidden text-center mb-4">
+     <div class="bg-gradient-to-br from-red-500 to-orange-500 text-white rounded-2xl px-8 py-4 inline-block shadow-lg">
+      <div class="text-sm font-bold uppercase tracking-wider">
+       Temps Restant
+      </div>
+      <div class="text-4xl font-black">
+       <span id="timer">2:00</span>
+      </div>
+     </div>
+    </div><!-- Score Dashboard -->
+    <div class="flex flex-wrap justify-center gap-3 mb-6 max-w-4xl mx-auto">
+     <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl px-6 py-3 shadow-lg">
+      <div class="text-white/80 text-xs font-bold uppercase tracking-wider">
+       Punts
+      </div>
+      <div class="text-white text-2xl font-black">
+       <span id="points">0</span> pts
+      </div>
+     </div>
+     <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl px-6 py-3 shadow-lg">
+      <div class="text-white/80 text-xs font-bold uppercase tracking-wider">
+       Encerts
+      </div>
+      <div class="text-white text-2xl font-black">
+       <span id="correct-count">0</span>
+      </div>
+     </div>
+     <div class="bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl px-6 py-3 shadow-lg">
+      <div class="text-white/80 text-xs font-bold uppercase tracking-wider">
+       Ratxa
+      </div>
+      <div class="text-white text-2xl font-black">
+       🔥 <span id="streak">0</span>
+      </div>
+     </div>
+     <div id="round-display" class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl px-6 py-3 shadow-lg">
+      <div class="text-white/80 text-xs font-bold uppercase tracking-wider">
+       Paraules
+      </div>
+      <div class="text-white text-2xl font-black">
+       <span id="words-completed">0</span>/10
+      </div>
+     </div>
+    </div><!-- Progress Bar -->
+    <div class="max-w-3xl mx-auto mb-6">
+     <div class="bg-slate-200 rounded-full h-3 overflow-hidden shadow-inner">
+      <div id="progress-bar" class="bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 h-full transition-all duration-500 ease-out" style="width: 0%"></div>
+     </div>
+    </div><!-- Grafia Buttons -->
+    <div class="flex flex-wrap justify-center gap-3 mb-6 max-w-3xl mx-auto"><button class="grafia-button bg-gradient-to-br from-rose-400 to-rose-500 hover:from-rose-500 hover:to-rose-600 text-white rounded-2xl px-8 py-4 shadow-lg border-4 border-rose-300" data-grafia="s"> <span class="text-4xl font-black">S</span> </button> <button class="grafia-button bg-gradient-to-br from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white rounded-2xl px-8 py-4 shadow-lg border-4 border-blue-300" data-grafia="ss"> <span class="text-4xl font-black">SS</span> </button> <button class="grafia-button bg-gradient-to-br from-emerald-400 to-emerald-500 hover:from-emerald-500 hover:to-emerald-600 text-white rounded-2xl px-8 py-4 shadow-lg border-4 border-emerald-300" data-grafia="c"> <span class="text-4xl font-black">C</span> </button> <button class="grafia-button bg-gradient-to-br from-violet-400 to-violet-500 hover:from-violet-500 hover:to-violet-600 text-white rounded-2xl px-8 py-4 shadow-lg border-4 border-violet-300" data-grafia="ç"> <span class="text-4xl font-black">Ç</span> </button> <button class="grafia-button bg-gradient-to-br from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600 text-white rounded-2xl px-8 py-4 shadow-lg border-4 border-orange-300" data-grafia="z"> <span class="text-4xl font-black">Z</span> </button>
+    </div><!-- Current Word Display -->
+    <div class="max-w-2xl mx-auto mb-6">
+     <div class="bg-gradient-to-br from-white to-slate-50 rounded-3xl p-8 shadow-2xl border-4 border-slate-200">
+      <div class="text-center">
+       <div class="text-slate-500 text-sm font-bold uppercase tracking-wider mb-3">
+        Quina és la grafia correcta?
+       </div>
+       <div id="current-word" class="text-5xl md:text-7xl font-black text-slate-800 mb-4 tracking-tight"><!-- Word will appear here -->
+       </div>
+       <div id="word-hint" class="text-slate-400 text-sm font-semibold italic hidden mt-2"><!-- Hint appears after answer -->
+       </div>
+       <div class="flex justify-center gap-2 mt-4">
+        <div class="h-2 w-2 bg-purple-400 rounded-full animate-pulse"></div>
+        <div class="h-2 w-2 bg-pink-400 rounded-full animate-pulse" style="animation-delay: 0.2s"></div>
+        <div class="h-2 w-2 bg-orange-400 rounded-full animate-pulse" style="animation-delay: 0.4s"></div>
+       </div>
+      </div>
+     </div>
+    </div><!-- Feedback Message -->
+    <div id="feedback-message" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 hidden">
+     <div id="feedback-content" class="bg-white rounded-3xl px-8 py-6 shadow-2xl border-4 text-center">
+      <div id="feedback-icon" class="text-6xl mb-2"></div>
+      <div id="feedback-text" class="text-2xl font-black"></div>
+      <div id="feedback-points" class="text-lg font-bold mt-1"></div>
+     </div>
+    </div>
+   </div><!-- Series Completion Modal (Practice Mode) -->
+   <div id="series-completion" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-3xl p-10 text-center shadow-2xl max-w-lg mx-4 border-4 border-blue-200">
+     <div class="text-7xl mb-4">
+      🎉
+     </div>
+     <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-3">Sèrie Completada!</h2>
+     <div class="bg-white rounded-2xl p-6 mb-6 shadow-lg">
+      <div class="grid grid-cols-2 gap-4">
+       <div>
+        <div class="text-3xl font-black text-purple-600">
+         <span id="series-points">0</span>
+        </div>
+        <div class="text-xs text-slate-600 font-bold uppercase">
+         Punts
+        </div>
+       </div>
+       <div>
+        <div class="text-3xl font-black text-emerald-600">
+         <span id="series-correct">0</span>/10
+        </div>
+        <div class="text-xs text-slate-600 font-bold uppercase">
+         Encerts
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="flex gap-3 justify-center"><button id="continue-btn" class="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transform hover:scale-105 transition-all"> ➜ Continuar (10 més) </button> <button id="finish-practice-btn" class="bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transform hover:scale-105 transition-all"> ✓ Acabar </button>
+     </div>
+    </div>
+   </div><!-- Competition End Modal -->
+   <div id="competition-end" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="bg-gradient-to-br from-orange-50 to-red-50 rounded-3xl p-10 text-center shadow-2xl max-w-lg mx-4 border-4 border-orange-200">
+     <div class="text-7xl mb-4">
+      🏆
+     </div>
+     <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-red-600 mb-3">Temps Acabat!</h2>
+     <div class="bg-white rounded-2xl p-6 mb-6 shadow-lg">
+      <div class="grid grid-cols-2 gap-4">
+       <div>
+        <div class="text-3xl font-black text-purple-600">
+         <span id="comp-points">0</span>
+        </div>
+        <div class="text-xs text-slate-600 font-bold uppercase">
+         Punts Totals
+        </div>
+       </div>
+       <div>
+        <div class="text-3xl font-black text-emerald-600">
+         <span id="comp-correct">0</span>
+        </div>
+        <div class="text-xs text-slate-600 font-bold uppercase">
+         Encerts
+        </div>
+       </div>
+       <div>
+        <div class="text-3xl font-black text-pink-600">
+         <span id="comp-streak">0</span>
+        </div>
+        <div class="text-xs text-slate-600 font-bold uppercase">
+         Millor Ratxa
+        </div>
+       </div>
+       <div>
+        <div class="text-3xl font-black text-orange-600">
+         <span id="comp-accuracy">0</span>%
+        </div>
+        <div class="text-xs text-slate-600 font-bold uppercase">
+         Precisió
+        </div>
+       </div>
+      </div>
+     </div><!-- Name Input for Ranking -->
+     <div class="mb-6"><label for="player-name-input" class="block text-slate-700 font-bold mb-2">Guarda el teu rècord:</label> <input type="text" id="player-name-input" placeholder="Escriu el teu nom" maxlength="20" class="w-full px-4 py-3 rounded-full border-4 border-orange-200 focus:border-orange-400 outline-none text-center font-bold text-lg">
+     </div>
+     <div class="flex gap-3 justify-center"><button id="save-score-btn" class="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transform hover:scale-105 transition-all"> 💾 Guardar i Veure Rànquing </button>
+     </div><button id="back-from-comp-btn" class="mt-4 text-slate-600 hover:text-slate-800 font-bold underline"> Tornar al menú </button>
+    </div>
+   </div><!-- Ranking Screen -->
+   <div id="ranking-screen" class="hidden max-w-4xl mx-auto">
+    <div class="text-center mb-8">
+     <h1 class="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-600 via-orange-600 to-red-600 mb-3">🏆 Rànquing</h1>
+     <p class="text-slate-700 text-base font-semibold">Els millors jugadors del Mode Competició</p>
+    </div><!-- Ranking List -->
+    <div class="bg-white rounded-3xl p-8 shadow-2xl border-4 border-yellow-200 mb-6">
+     <div id="ranking-list" class="space-y-3"><!-- Rankings will be populated here -->
+     </div>
+     <div id="empty-ranking" class="text-center py-12 text-slate-400">
+      <div class="text-6xl mb-4">
+       🎯
+      </div>
+      <p class="text-lg font-semibold">Encara no hi ha cap rècord!</p>
+      <p class="text-sm">Sigues el primer en completar el mode competició</p>
+     </div>
+    </div>
+    <div class="text-center"><button id="back-from-ranking-btn" class="bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white font-bold py-3 px-8 rounded-full shadow-lg transform hover:scale-105 transition-all"> ← Tornar al Menú </button>
+    </div>
+   </div>
+  </div>
+  <script>
+    // Word database - 102 words
+    const wordsData = [
+      // S (23 words)
+      { word: "casa", grafia: "s", hint: "(habitatge)" }, { word: "posar", grafia: "s" }, { word: "rosa", grafia: "s", hint: "(flor)" }, 
+      { word: "música", grafia: "s" }, { word: "cosa", grafia: "s" }, { word: "camisa", grafia: "s" },
+      { word: "asil", grafia: "s" }, { word: "xinesa", grafia: "s" },
+      { word: "visita", grafia: "s" }, { word: "president", grafia: "s" }, { word: "absent", grafia: "s" },
+      { word: "consell", grafia: "s" }, { word: "prosa", grafia: "s" },
+      { word: "persona", grafia: "s" }, { word: "salsa", grafia: "s" }, { word: "polsar", grafia: "s" },
+      { word: "aragonesa", grafia: "s" }, { word: "sortir", grafia: "s" }, { word: "dosi", grafia: "s" },
+      { word: "tros", grafia: "s" }, { word: "pesa", grafia: "s", hint: "(verb)" },
+      { word: "marquesa", grafia: "s", hint: "(títol)" }, { word: "pagesa", grafia: "s" },
+      
+      // SS (24 words)
+      { word: "passar", grafia: "ss" }, { word: "classe", grafia: "ss" }, { word: "massís", grafia: "ss" },
+      { word: "pressió", grafia: "ss" }, { word: "assassí", grafia: "ss" }, { word: "agressió", grafia: "ss" },
+      { word: "expressió", grafia: "ss" }, { word: "impressió", grafia: "ss" }, { word: "ossada", grafia: "ss" },
+      { word: "missatge", grafia: "ss" }, { word: "interessar", grafia: "ss" }, { word: "processar", grafia: "ss" },
+      { word: "professió", grafia: "ss" }, { word: "posseir", grafia: "ss" }, { word: "glossari", grafia: "ss" },
+      { word: "discussió", grafia: "ss" }, { word: "cassola", grafia: "ss" }, { word: "missió", grafia: "ss" },
+      { word: "depressió", grafia: "ss" }, { word: "metgessa", grafia: "ss" },
+      { word: "comtessa", grafia: "ss" }, { word: "batlessa", grafia: "ss" }, { word: "hissen", grafia: "ss" },
+      { word: "rossa", grafia: "ss", hint: "(cabell)" },
+      
+      // C (18 words)
+      { word: "cel", grafia: "c", hint: "(blau)" }, { word: "cinema", grafia: "c" }, { word: "ceba", grafia: "c" },
+      { word: "cilindre", grafia: "c" }, { word: "cendra", grafia: "c" }, { word: "centre", grafia: "c" },
+      { word: "cercar", grafia: "c" }, { word: "ciment", grafia: "c" }, { word: "cisterna", grafia: "c" },
+      { word: "accident", grafia: "c" }, { word: "decent", grafia: "c" }, { word: "silenci", grafia: "c" },
+      { word: "ciència", grafia: "c" }, { word: "recent", grafia: "c" },
+      { word: "exercici", grafia: "c" }, { word: "innocència", grafia: "c" },
+      { word: "glàcera", grafia: "c" }, { word: "tracció", grafia: "c" },
+      
+      // Ç (18 words)
+      { word: "plaça", grafia: "ç" }, { word: "força", grafia: "ç" }, { word: "cançó", grafia: "ç" },
+      { word: "caçar", grafia: "ç" }, { word: "començar", grafia: "ç" }, { word: "braç", grafia: "ç" },
+      { word: "forçar", grafia: "ç" }, { word: "peça", grafia: "ç", hint: "(instrument)" }, { word: "dolç", grafia: "ç" },
+      { word: "raça", grafia: "ç", hint: "(espècie)" }, { word: "traçar", grafia: "ç" }, { word: "caça", grafia: "ç", hint: "(animals)" },
+      { word: "calç", grafia: "ç" }, { word: "caçador", grafia: "ç" }, { word: "balança", grafia: "ç" },
+      { word: "desplaçar", grafia: "ç" }, { word: "reforç", grafia: "ç" }, { word: "terç", grafia: "ç" },
+      
+      // Z (19 words)
+      { word: "zona", grafia: "z" }, { word: "zero", grafia: "z" }, { word: "zoològic", grafia: "z" },
+      { word: "amazona", grafia: "z" }, { word: "quinze", grafia: "z" }, { word: "setze", grafia: "z" },
+      { word: "dotze", grafia: "z" }, { word: "onze", grafia: "z" }, { word: "tretze", grafia: "z" },
+      { word: "trapezi", grafia: "z" }, { word: "guitza", grafia: "z" }, { word: "zel", grafia: "z", hint: "(enveja)" },
+      { word: "bizantí", grafia: "z" }, { word: "zenital", grafia: "z" }, { word: "zig-zag", grafia: "z" },
+      { word: "zenit", grafia: "z" }, { word: "quinzenari", grafia: "z" },
+      { word: "bronze", grafia: "z" }, { word: "trapezista", grafia: "z" }
+    ];
+
+    // Game state
+    let currentMode = null;
+ let startTimestamp = null;
+ let attemptLog = [];
+ let sentResult = false;
+ // 'practice' or 'competition'
+    let points = 0;
+    let correctCount = 0;
+    let errorCount = 0;
+    let streak = 0;
+    let bestStreak = 0;
+    let currentWordIndex = 0;
+    let shuffledWords = [];
+    let currentWord = null;
+    let wordsPerSeries = 10;
+    let currentSeriesWords = 0;
+    
+    // Competition mode
+    let timerInterval = null;
+    let timeRemaining = 120; // 2 minutes in seconds
+    let isGameActive = false;
+
+    // Rankings data
+    let rankingsData = [];
+
+    // Default config
+    const defaultConfig = {
+      activity_title: "⚡ Entrena les Grafies",
+      instruction_text: "Classifica cada paraula segons la seva grafia correcta"
+    };
+    
+    // Data SDK handler
+    const dataHandler = {
+      onDataChanged(data) {
+        rankingsData = data.sort((a, b) => b.score - a.score).slice(0, 10);
+        updateRankingDisplay();
+      }
+    };
+
+    function shuffleArray(array) {
+      const shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
+
+    // Show/Hide screens
+    function showScreen(screenId) {
+      document.getElementById('main-menu').classList.add('hidden');
+      document.getElementById('game-screen').classList.add('hidden');
+      document.getElementById('ranking-screen').classList.add('hidden');
+      document.getElementById(screenId).classList.remove('hidden');
+    }
+
+    // Start practice mode
+    function startPracticeMode() {
+      currentMode = 'practice';
+      resetGameState();
+  startTimestamp = Date.now();
+  attemptLog = [];
+  sentResult = false;
+      shuffledWords = shuffleArray([...wordsData]);
+      
+      document.getElementById('mode-indicator').textContent = '📚 Mode Pràctica';
+      document.getElementById('timer-container').classList.add('hidden');
+      document.getElementById('round-display').classList.remove('hidden');
+      
+      showScreen('game-screen');
+      showNextWord();
+    }
+
+    // Start competition mode
+    function startCompetitionMode() {
+      currentMode = 'competition';
+      resetGameState();
+  startTimestamp = Date.now();
+  attemptLog = [];
+  sentResult = false;
+      shuffledWords = shuffleArray([...wordsData]);
+      timeRemaining = 120;
+      isGameActive = true;
+      
+      document.getElementById('mode-indicator').textContent = '⏱️ Mode Competició';
+      document.getElementById('timer-container').classList.remove('hidden');
+      document.getElementById('round-display').classList.remove('hidden');
+      
+      showScreen('game-screen');
+      startTimer();
+      showNextWord();
+    }
+
+    // Timer for competition mode
+    function startTimer() {
+      updateTimerDisplay();
+      timerInterval = setInterval(() => {
+        if (!isGameActive) {
+          clearInterval(timerInterval);
+          return;
+        }
+        
+        timeRemaining--;
+        updateTimerDisplay();
+        
+        if (timeRemaining <= 0) {
+          endCompetition();
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      const minutes = Math.floor(timeRemaining / 60);
+      const seconds = timeRemaining % 60;
+      document.getElementById('timer').textContent = 
+        `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    function endCompetition() {
+      isGameActive = false;
+      clearInterval(timerInterval);
+      
+      const totalAttempts = correctCount + errorCount;
+      const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 0;
+      
+      document.getElementById('comp-points').textContent = points;
+      document.getElementById('comp-correct').textContent = correctCount;
+      document.getElementById('comp-streak').textContent = bestStreak;
+      document.getElementById('comp-accuracy').textContent = accuracy;
+      
+      document.getElementById('competition-end').classList.remove('hidden');
+      playCompletionSound();
+      createConfetti();
+  sendResultToPortal();
+    }
+
+    // Reset game state
+    function resetGameState() {
+      points = 0;
+      correctCount = 0;
+      errorCount = 0;
+      streak = 0;
+      bestStreak = 0;
+      currentWordIndex = 0;
+      currentSeriesWords = 0;
+      
+      document.getElementById('points').textContent = '0';
+      document.getElementById('correct-count').textContent = '0';
+      document.getElementById('streak').textContent = '0';
+      document.getElementById('words-completed').textContent = '0';
+      document.getElementById('progress-bar').style.width = '0%';
+    }
+
+    // Show next word
+    function showNextWord() {
+      if (currentMode === 'practice' && currentSeriesWords >= wordsPerSeries) {
+        showSeriesCompletion();
+        return;
+      }
+      
+      if (currentWordIndex >= shuffledWords.length) {
+        shuffledWords = shuffleArray([...wordsData]);
+        currentWordIndex = 0;
+      }
+
+      currentWord = shuffledWords[currentWordIndex];
+      const wordDisplay = document.getElementById('current-word');
+      
+      // Replace the problematic letter with underscore
+      let displayWord = currentWord.word;
+      const grafiaToFind = currentWord.grafia.toLowerCase();
+      
+      // Create regex to find the specific grafia pattern
+      let regex;
+      if (grafiaToFind === 'ss') {
+        regex = /ss/gi;
+      } else if (grafiaToFind === 'ç') {
+        regex = /ç/gi;
+      } else if (grafiaToFind === 'z') {
+        regex = /z/gi;
+      } else if (grafiaToFind === 'c') {
+        regex = /c(?=[ei])/gi;
+      } else if (grafiaToFind === 's') {
+        regex = /(?<!s)s(?!s)/gi;
+      }
+      
+      if (regex) {
+        displayWord = displayWord.replace(regex, '_');
+      }
+      
+      if (currentWord.hint) {
+        displayWord += ' ' + currentWord.hint;
+      }
+      
+      wordDisplay.textContent = displayWord;
+      wordDisplay.style.animation = 'none';
+      setTimeout(() => {
+        wordDisplay.style.animation = 'fadeIn 0.5s ease';
+      }, 10);
+
+      document.getElementById('word-hint').classList.add('hidden');
+      
+      if (currentMode === 'practice') {
+        document.getElementById('words-completed').textContent = currentSeriesWords;
+        const progress = (currentSeriesWords / wordsPerSeries) * 100;
+        document.getElementById('progress-bar').style.width = progress + '%';
+      } else {
+        document.getElementById('words-completed').textContent = correctCount;
+        document.getElementById('progress-bar').style.width = '100%';
+      }
+    }
+
+    // Setup grafia buttons
+    function setupGrafiaButtons() {
+      const buttons = document.querySelectorAll('.grafia-button');
+      
+      buttons.forEach(button => {
+        button.addEventListener('click', () => {
+          if (!currentWord || !isGameActive) return;
+          handleAnswer(button.dataset.grafia);
+        });
+      });
+    }
+
+    // Handle answer
+    function handleAnswer(selectedGrafia) {
+      if (!currentWord) return;
+      
+      const isCorrect = selectedGrafia === currentWord.grafia;
+
+// 🔎 Guardam el detall per poder veure errades
+attemptLog.push({
+  numero: (currentMode === 'practice') ? (currentSeriesWords + 1) : (correctCount + errorCount + 1),
+  paraula: currentWord.word,
+  respostaUsuari: selectedGrafia,
+  respostaCorrecta: currentWord.grafia,
+  correcta: isCorrect
+});
+      
+      if (isCorrect) {
+        streak++;
+        if (streak > bestStreak) bestStreak = streak;
+        
+        let pointsEarned = 10;
+        if (streak >= 5) pointsEarned = 20;
+        if (streak >= 10) pointsEarned = 30;
+        
+        points += pointsEarned;
+        correctCount++;
+        
+        document.getElementById('points').textContent = points;
+        document.getElementById('correct-count').textContent = correctCount;
+        document.getElementById('streak').textContent = streak;
+        
+        showFeedback(true, pointsEarned);
+      } else {
+        errorCount++;
+        streak = 0;
+        document.getElementById('streak').textContent = streak;
+        
+        showFeedback(false, 0);
+      }
+
+      currentWordIndex++;
+      currentSeriesWords++;
+      
+      setTimeout(() => {
+        showNextWord();
+      }, 1500);
+    }
+
+    // Show series completion (practice mode)
+    function showSeriesCompletion() {
+      isGameActive = false;
+      
+      document.getElementById('series-points').textContent = points;
+      document.getElementById('series-correct').textContent = correctCount;
+      document.getElementById('series-completion').classList.remove('hidden');
+      
+      playCompletionSound();
+    }
+
+    // Continue to next series
+    function continueNextSeries() {
+      currentSeriesWords = 0;
+      isGameActive = true;
+      document.getElementById('series-completion').classList.add('hidden');
+      document.getElementById('words-completed').textContent = '0';
+      document.getElementById('progress-bar').style.width = '0%';
+      showNextWord();
+    }
+
+    // Sound effects
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playCorrectSound() {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
+      oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1);
+      oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2);
+      
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.4);
+    }
+    
+    function playStreakSound() {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.type = 'triangle';
+      oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(1760, audioContext.currentTime + 0.2);
+      
+      gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.3);
+    }
+    
+    function playIncorrectSound() {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.type = 'sawtooth';
+      oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.3);
+      
+      gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.3);
+    }
+    
+    function playCompletionSound() {
+      const notes = [523.25, 659.25, 783.99, 1046.50];
+      notes.forEach((freq, index) => {
+        setTimeout(() => {
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          
+          oscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
+          gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+          
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.5);
+        }, index * 100);
+      });
+    }
+
+    // Show feedback
+    function showFeedback(isCorrect, pointsEarned) {
+      const feedback = document.getElementById('feedback-message');
+      const icon = document.getElementById('feedback-icon');
+      const text = document.getElementById('feedback-text');
+      const pointsText = document.getElementById('feedback-points');
+      const content = document.getElementById('feedback-content');
+      const hint = document.getElementById('word-hint');
+      
+      hint.textContent = 'Paraula completa: ' + currentWord.word;
+      hint.classList.remove('hidden');
+      
+      if (isCorrect) {
+        if (streak >= 5) {
+          playStreakSound();
+        } else {
+          playCorrectSound();
+        }
+        
+        icon.textContent = '✓';
+        text.textContent = 'Correcte!';
+        text.style.color = '#10b981';
+        content.style.borderColor = '#10b981';
+        pointsText.textContent = '+' + pointsEarned + ' punts';
+        pointsText.style.color = '#8b5cf6';
+        
+        if (streak >= 5) {
+          text.textContent = '🔥 Increïble!';
+        }
+        if (streak >= 10) {
+          text.textContent = '⚡ Imparable!';
+        }
+      } else {
+        playIncorrectSound();
+        
+        icon.textContent = '✗';
+        text.textContent = 'Incorrecte';
+        text.style.color = '#ef4444';
+        content.style.borderColor = '#ef4444';
+        pointsText.textContent = 'Correcte: ' + currentWord.grafia.toUpperCase();
+        pointsText.style.color = '#64748b';
+      }
+      
+      feedback.classList.remove('hidden');
+      feedback.style.animation = 'fadeIn 0.3s ease';
+      
+      setTimeout(() => {
+        feedback.classList.add('hidden');
+      }, 1200);
+    }
+
+    // Confetti effect
+    function createConfetti() {
+      const colors = ['#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ef4444'];
+      for (let i = 0; i < 50; i++) {
+        setTimeout(() => {
+          const confetti = document.createElement('div');
+          confetti.className = 'confetti';
+          confetti.style.left = Math.random() * 100 + 'vw';
+          confetti.style.top = '-10px';
+          confetti.style.width = '10px';
+          confetti.style.height = '10px';
+          confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+          confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+          confetti.style.transform = 'rotate(' + (Math.random() * 360) + 'deg)';
+          document.body.appendChild(confetti);
+          
+          let posY = -10;
+          let posX = parseFloat(confetti.style.left);
+          let rotation = 0;
+          const speed = 2 + Math.random() * 3;
+          const drift = (Math.random() - 0.5) * 2;
+          
+          const fall = setInterval(() => {
+            posY += speed;
+            posX += drift;
+            rotation += 5;
+            confetti.style.top = posY + 'px';
+            confetti.style.left = posX + 'vw';
+            confetti.style.transform = 'rotate(' + rotation + 'deg)';
+            
+            if (posY > window.innerHeight) {
+              clearInterval(fall);
+              confetti.remove();
+            }
+          }, 20);
+        }, i * 30);
+      }
+    }
+
+    // Save score to ranking
+    async function saveScore() {
+      const playerName = document.getElementById('player-name-input').value.trim();
+      
+      if (!playerName) {
+        const messageDiv = document.createElement('div');
+        messageDiv.textContent = 'Si us plau, escriu el teu nom!';
+        messageDiv.className = 'text-red-600 font-bold mt-2';
+        messageDiv.id = 'name-error';
+        
+        const existingError = document.getElementById('name-error');
+        if (existingError) existingError.remove();
+        
+        document.getElementById('player-name-input').parentNode.appendChild(messageDiv);
+        return;
+      }
+      
+      const scoreData = {
+        player_name: playerName,
+        score: points,
+        correct_answers: correctCount,
+        time_completed: new Date().toISOString()
+      };
+      
+      const saveBtn = document.getElementById('save-score-btn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Guardant...';
+      
+      if (window.dataSdk) {
+        const result = await window.dataSdk.create(scoreData);
+        
+        if (result.isOk) {
+          document.getElementById('competition-end').classList.add('hidden');
+          showScreen('ranking-screen');
+        } else {
+          const messageDiv = document.createElement('div');
+          messageDiv.textContent = 'Error al guardar. Torna-ho a intentar.';
+          messageDiv.className = 'text-red-600 font-bold mt-2';
+          messageDiv.id = 'save-error';
+          
+          const existingError = document.getElementById('save-error');
+          if (existingError) existingError.remove();
+          
+          saveBtn.parentNode.appendChild(messageDiv);
+        }
+      }
+      
+      saveBtn.disabled = false;
+      saveBtn.textContent = '💾 Guardar i Veure Rànquing';
+    }
+
+    // Update ranking display
+    function updateRankingDisplay() {
+      const rankingList = document.getElementById('ranking-list');
+      const emptyRanking = document.getElementById('empty-ranking');
+      
+      if (rankingsData.length === 0) {
+        rankingList.innerHTML = '';
+        emptyRanking.classList.remove('hidden');
+        return;
+      }
+      
+      emptyRanking.classList.add('hidden');
+      
+      const medals = ['🥇', '🥈', '🥉'];
+      
+      rankingList.innerHTML = rankingsData.map((record, index) => {
+        const medal = medals[index] || `${index + 1}.`;
+        const date = new Date(record.time_completed);
+        const dateStr = date.toLocaleDateString('ca-ES', { day: 'numeric', month: 'short' });
+        
+        return `
+          <div class="flex items-center justify-between bg-gradient-to-r ${index === 0 ? 'from-yellow-100 to-orange-100 border-yellow-400' : index === 1 ? 'from-gray-100 to-gray-200 border-gray-400' : index === 2 ? 'from-orange-100 to-orange-200 border-orange-400' : 'from-slate-50 to-slate-100 border-slate-300'} border-4 rounded-2xl p-4 shadow-lg">
+            <div class="flex items-center gap-4 flex-1">
+              <div class="text-3xl font-black w-12 text-center">${medal}</div>
+              <div class="flex-1">
+                <div class="text-xl font-black text-slate-800">${record.player_name}</div>
+                <div class="text-sm text-slate-600 font-semibold">${record.correct_answers} encerts · ${dateStr}</div>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-2xl font-black text-purple-600">${record.score}</div>
+              <div class="text-xs text-slate-600 font-bold">PUNTS</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    
+
+// ✅ Enviar resultat al portal (wrapper) via postMessage
+function sendResultToPortal() {
+  if (sentResult) return;
+
+  const total = correctCount + errorCount;
+  if (total <= 0) return;
+
+  const encerts = correctCount;
+  const errades = errorCount;
+  const tempsSegons = startTimestamp ? Math.round((Date.now() - startTimestamp) / 1000) : null;
+
+  const errors = attemptLog
+    .filter(x => !x.correcta)
+    .map(x => ({
+      pregunta: x.numero,
+      respostaUsuari: String(x.respostaUsuari).toUpperCase(),
+      respostaCorrecta: String(x.respostaCorrecta).toUpperCase(),
+      paraula: x.paraula
+    }));
+
+  window.parent.postMessage({
+    type: 'ACT_RESULT',
+    activityId: 'A2',
+    payload: { total, encerts, errades, tempsSegons, errors }
+  }, '*');
+
+  sentResult = true;
+}
+// Event Listeners
+    document.getElementById('practice-mode-btn').addEventListener('click', () => {
+      isGameActive = true;
+      startPracticeMode();
+    });
+    
+    document.getElementById('competition-mode-btn').addEventListener('click', () => {
+      isGameActive = true;
+      startCompetitionMode();
+    });
+    
+    document.getElementById('ranking-btn').addEventListener('click', () => {
+      showScreen('ranking-screen');
+    });
+    
+    document.getElementById('back-to-menu-btn').addEventListener('click', () => {
+      isGameActive = false;
+      clearInterval(timerInterval);
+      showScreen('main-menu');
+    });
+    
+    document.getElementById('continue-btn').addEventListener('click', () => {
+      continueNextSeries();
+    });
+    
+    document.getElementById('finish-practice-btn').addEventListener('click', () => {
+  sendResultToPortal();
+      document.getElementById('series-completion').classList.add('hidden');
+      showScreen('main-menu');
+    });
+    
+    document.getElementById('save-score-btn').addEventListener('click', saveScore);
+    
+    document.getElementById('back-from-comp-btn').addEventListener('click', () => {
+      document.getElementById('competition-end').classList.add('hidden');
+      showScreen('main-menu');
+    });
+    
+    document.getElementById('back-from-ranking-btn').addEventListener('click', () => {
+      showScreen('main-menu');
+    });
+
+    // Config change handler
+    async function onConfigChange(config) {
+      const title = config.activity_title || defaultConfig.activity_title;
+      const instruction = config.instruction_text || defaultConfig.instruction_text;
+      
+      document.getElementById('main-title').innerHTML = title;
+      document.getElementById('instruction-text').textContent = instruction;
+    }
+
+    // Map to capabilities
+    function mapToCapabilities(config) {
+      return {
+        recolorables: [],
+        borderables: [],
+        fontEditable: undefined,
+        fontSizeable: undefined
+      };
+    }
+
+    // Map to edit panel values
+    function mapToEditPanelValues(config) {
+      return new Map([
+        ["activity_title", config.activity_title || defaultConfig.activity_title],
+        ["instruction_text", config.instruction_text || defaultConfig.instruction_text]
+      ]);
+    }
+
+    // Initialize
+    async function init() {
+      setupGrafiaButtons();
+      
+      if (window.dataSdk) {
+        await window.dataSdk.init(dataHandler);
+      }
+      
+      if (window.elementSdk) {
+        window.elementSdk.init({
+          defaultConfig,
+          onConfigChange,
+          mapToCapabilities,
+          mapToEditPanelValues
+        });
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Accés</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="page-login">
+
+<section class="hero-photo hero-compact" style="--hero-img: url('assets/hero/hero_main.webp'); --hero-img-mobile: url('assets/hero/hero_main_mobile.webp');">
+  <div class="hero-inner">
+    <h1 class="hero-title">Accediu al portal</h1>
+    <p class="hero-sub">Inicia sessió amb correu i contrasenya</p>
+  </div>
+</section>
+
+<section style="margin-top:18px;padding:0 20px 60px;">
+  <div class="hero-card" style="max-width:520px;margin:0 auto;">
+<div style="text-align:left;text-align:left;background:#ffffffc7;padding:18px;border-radius:18px;box-shadow:0 10px 28px rgba(0,0,0,.08);">
+    <label>Correu</label>
+    <input id="email" type="email" placeholder="nom@domini.com" style="width:100%;padding:12px;border-radius:12px;border:1px solid #ddd;margin:6px 0 10px;">
+
+    <label>Contrasenya</label>
+    <input id="pass" type="password" placeholder="••••••••" style="width:100%;padding:12px;border-radius:12px;border:1px solid #ddd;margin:6px 0 10px;">
+
+    <!-- Alta controlada (opcional) -->
+    <div style="margin-top:10px;">
+      <label>Codi d'aula (només per crear compte)</label>
+      <input id="codi" type="text" placeholder="Escriviu el codi d'aula" style="width:100%;padding:12px;border-radius:12px;border:1px solid #ddd;margin:6px 0 10px;">
+      <small style="color:#666;display:block;margin-top:-4px;">Si ja tens compte, deixa el codi en blanc i entra normal.</small>
+    </div>
+
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:14px;">
+      <button id="btnLogin" class="btn-hero" style="flex:1;">Entreu →</button>
+      <button id="btnAlta" class="btn-hero" style="flex:1;">Creeu compte</button>
+    </div>
+
+    <p id="msg" style="margin-top:14px;color:#b91c1c;"></p>
+  </div>
+
+  </div>
+</section>
+
+
+<script type="module">
+  import { auth } from "./firebase.js";
+  import {
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword
+  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+  const CODI_AULA = "CEPA2026"; // ✅ canvia'l pel teu codi
+
+  const $ = (id) => document.getElementById(id);
+  const msg = (t) => $("msg").textContent = t || "";
+
+  $("btnLogin").onclick = async () => {
+    msg("");
+    try {
+      await signInWithEmailAndPassword(auth, $("email").value.trim(), $("pass").value);
+      window.location = "unitats.html";
+    } catch (e) {
+      msg("No s'ha pogut iniciar sessió. Revisa correu i contrasenya.");
+      console.error(e);
+    }
+  };
+
+  $("btnAlta").onclick = async () => {
+    msg("");
+    const codi = $("codi").value.trim();
+    if (codi !== CODI_AULA) {
+      msg("Codi d'aula incorrecte. Demana'l al professor.");
+      return;
+    }
+    try {
+      await createUserWithEmailAndPassword(auth, $("email").value.trim(), $("pass").value);
+      window.location = "unitats.html";
+    } catch (e) {
+      msg("No s'ha pogut crear el compte (correu ja usat o contrasenya feble).");
+      console.error(e);
+    }
+  };
+</script>
+
+</body>
+</html>
