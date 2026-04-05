@@ -5,7 +5,7 @@ import { ref, get, query, orderByChild, limitToLast } from "https://www.gstatic.
 const PROFE_JS_VERSION = "2026-04-02_students_click_v2";
 console.log("✅ PROFE JS carregat:", PROFE_JS_VERSION);
 
-const PROFESSOR_EMAIL = "josepantonipeiro@cepallevant.eu";
+const PROFESSOR_EMAIL = "josepantonipeiro@cepallevant.eu, "ximznr@gmail.com";
 const ACTIVITATS = ["A1","A2","A3","A4","A5","A6","A7","A8","A9","A10"];
 const PER_ACT_SCAN = 500;
 const PER_ACT_ATTEMPTS = 500;
