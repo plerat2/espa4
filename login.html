@@ -25,7 +25,7 @@
     <input id="email" type="email" placeholder="nom@domini.com" style="width:100%;padding:12px;border-radius:12px;border:1px solid #ddd;margin:6px 0 10px;">
 
     <label>Contrasenya</label>
-    <input id="pass" type="password" placeholder="••••••••" style="width:100%;padding:12px;border-radius:12px;border:1px solid #ddd;margin:6px 0 10px;">
+    <input id="pass" type="password" placeholder="escriu la contrasenya" style="width:100%;padding:12px;border-radius:12px;border:1px solid #ddd;margin:6px 0 10px;">
 
     <!-- Alta controlada (opcional) -->
     <div style="margin-top:10px;">
@@ -58,10 +58,25 @@
   const $ = (id) => document.getElementById(id);
   const msg = (t) => $("msg").textContent = t || "";
 
+  // ✅ ÚNIC AFEGIT: només permet correus @cepallevant.eu
+  function emailPermes(email) {
+    return /@cepallevant\.eu$/i.test((email || "").trim());
+  }
+
   $("btnLogin").onclick = async () => {
     msg("");
+
+    const email = $("email").value.trim();
+    const pass = $("pass").value;
+
+    // ✅ ÚNIC AFEGIT: bloqueig de domini al login
+    if (!emailPermes(email)) {
+      msg("Accés restringit: només correus @cepallevant.eu");
+      return;
+    }
+
     try {
-      await signInWithEmailAndPassword(auth, $("email").value.trim(), $("pass").value);
+      await signInWithEmailAndPassword(auth, email, pass);
       window.location = "unitats.html";
     } catch (e) {
       msg("No s'ha pogut iniciar sessió. Revisa correu i contrasenya.");
@@ -71,13 +86,24 @@
 
   $("btnAlta").onclick = async () => {
     msg("");
+
+    const email = $("email").value.trim();
+    const pass = $("pass").value;
     const codi = $("codi").value.trim();
+
+    // ✅ ÚNIC AFEGIT: bloqueig de domini a l’alta
+    if (!emailPermes(email)) {
+      msg("Només es poden crear comptes amb correu @cepallevant.eu");
+      return;
+    }
+
     if (codi !== CODI_AULA) {
       msg("Codi d'aula incorrecte. Demana'l al professor.");
       return;
     }
+
     try {
-      await createUserWithEmailAndPassword(auth, $("email").value.trim(), $("pass").value);
+      await createUserWithEmailAndPassword(auth, email, pass);
       window.location = "unitats.html";
     } catch (e) {
       msg("No s'ha pogut crear el compte (correu ja usat o contrasenya feble).");
